@@ -1,5 +1,8 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,18 +13,48 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [mobile, setMobile] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showSignupModal, setShowSignupModal] = useState(false);
   const router = useRouter();
+
+  const loginMutation = useMutation({
+    mutationFn: async ({ identifier, password }: { identifier: string; password: string }) => {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Login failed");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (!data.user.isVerified) {
+        toast.info("Your account is not verified yet.");
+        return;
+      }
+      if (data.user.role === "admin") router.push("/admin");
+      else if (data.user.role === "shop") router.push("/shop");
+      else if (data.user.role === "salesman") router.push("/salesman");
+      else router.push("/");
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        toast.error(error.message || "Login failed");
+      } else {
+        toast.error("Login failed");
+      }
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Mobile:", mobile);
-    console.log("Password:", password);
-    // Add authentication logic here
+    loginMutation.mutate({ identifier, password });
   };
 
   return (
@@ -37,15 +70,16 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5 mt-2">
             <div className="flex flex-col gap-1">
-              <label htmlFor="mobile" className="text-sm font-medium text-foreground">Mobile Number</label>
+              <label htmlFor="identifier" className="text-sm font-medium text-foreground">Email or Mobile</label>
               <Input
-                id="mobile"
-                type="tel"
-                placeholder="Enter your mobile number"
-                value={mobile}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMobile(e.target.value)}
+                id="identifier"
+                name="identifier"
+                type="text"
+                placeholder="Enter your email or mobile number"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
-                autoComplete="tel"
+                autoComplete="username"
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -55,18 +89,22 @@ export default function LoginPage() {
                 type="password"
                 placeholder="Enter your password"
                 value={password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
               />
             </div>
-            <div className="flex items-center justify-between mt-1">
-              <a href="#" className="text-sm text-primary hover:underline">Forgot password?</a>
-            </div>
             <CardFooter className="p-0">
-              <Button type="submit" className="w-full mt-2">Login</Button>
+              <Button type="submit" className="w-full mt-2" disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? "Logging in..." : "Login"}
+              </Button>
             </CardFooter>
           </form>
+          {loginMutation.isError && (
+            <div className="text-center text-destructive mt-4">
+              {loginMutation.error instanceof Error ? loginMutation.error.message : "Login failed"}
+            </div>
+          )}
         </CardContent>
       </Card>
       <div className="mt-6 text-center">
