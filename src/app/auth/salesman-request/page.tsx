@@ -1,20 +1,51 @@
 "use client";
-import { useState } from "react";
+import { useState as useReactState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useQuery } from "@tanstack/react-query";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 
 const validationSchema = Yup.object({
   name: Yup.string().required("Name is required"),
   mobile: Yup.string().required("Mobile is required"),
   email: Yup.string().email("Invalid email address"),
   shop: Yup.string().required("Shop code or name is required"),
+  password: Yup.string().min(6, "Password is required").required("Password is required"),
 });
 
 export default function SalesmanRequestPage() {
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useReactState(false);
+  const [showPassword, setShowPassword] = useReactState(false);
+
+  const mutation = useMutation({
+    mutationFn: async (values: typeof formik.initialValues) => {
+      const res = await fetch("/api/shop/salesman-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Submission failed");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Request submitted! Pending approval by the shop owner.");
+      formik.resetForm();
+      setSubmitted(true);
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error) toast.error(error.message);
+      else toast.error("Submission failed");
+    },
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -22,13 +53,21 @@ export default function SalesmanRequestPage() {
       mobile: "",
       email: "",
       shop: "",
+      password: "",
     },
     validationSchema,
     onSubmit: (values) => {
-      setSubmitted(true);
-      // TODO: Send to backend
-      console.log("Salesman Request:", values);
+      mutation.mutate(values);
     },
+  });
+
+  // Fetch shops
+  const { data: shops } = useQuery({
+    queryKey: ["shops"],
+    queryFn: async () => {
+      const res = await fetch("/api/shops");
+      return res.json();
+    }
   });
 
   return (
@@ -96,25 +135,67 @@ export default function SalesmanRequestPage() {
                 )}
               </div>
               <div className="flex flex-col gap-1">
+                <label htmlFor="password" className="text-sm font-medium text-foreground">Password</label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    required
+                    placeholder="Password"
+                    aria-invalid={formik.touched.password && !!formik.errors.password}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {formik.touched.password && formik.errors.password && (
+                  <span className="text-xs text-destructive mt-1">{formik.errors.password}</span>
+                )}
+              </div>
+              <div className="flex flex-col gap-1 w-full">
                 <label htmlFor="shop" className="text-sm font-medium text-foreground">Shop Code or Shop Name</label>
-                <Input
-                  id="shop"
-                  name="shop"
+                <Select
                   value={formik.values.shop}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
+                  onValueChange={value => formik.setFieldValue("shop", value)}
                   required
-                  placeholder="Shop code or name"
-                  aria-invalid={formik.touched.shop && !!formik.errors.shop}
-                />
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select shop" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {shops?.map((shop: any) => (
+                      <SelectItem key={shop._id} value={shop._id} >
+                        {shop.shopName} 
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {formik.touched.shop && formik.errors.shop && (
                   <span className="text-xs text-destructive mt-1">{formik.errors.shop}</span>
                 )}
               </div>
               <CardFooter className="p-0">
-                <Button type="submit" className="w-full mt-2" disabled={formik.isSubmitting}>Request Access</Button>
+                <Button type="submit" className="w-full mt-2" disabled={formik.isSubmitting || mutation.isPending}>
+                  {mutation.isPending ? "Submitting..." : "Request Access"}
+                </Button>
               </CardFooter>
             </form>
+          )}
+          {mutation.isError && (
+            <div className="text-center text-destructive mt-4">
+              {mutation.error instanceof Error ? mutation.error.message : "Submission failed"}
+            </div>
           )}
         </CardContent>
       </Card>
