@@ -55,7 +55,7 @@ export default function CreateOrderPage() {
               <div className="flex flex-wrap gap-4 mt-3">
                 {previews.map((src, idx) => (
                   <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden">
-                    <img src={src} alt="preview" className="object-cover w-full h-full" />
+                    <Image src={src} alt="preview" className="object-cover w-full h-full" />
                     <button
                       type="button"
                       className="absolute top-1 right-1 bg-white/80 rounded-full p-1 hover:bg-white"
