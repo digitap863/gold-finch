@@ -3,22 +3,20 @@ import { jwtVerify } from "jose";
 
 const roleDashboard = {
   admin: "/admin",
-  shop: "/shop",
   salesman: "/salesman",
 };
 
 type UserRole = keyof typeof roleDashboard;
 
 function isUserRole(role: unknown): role is UserRole {
-  return typeof role === "string" && ["admin", "shop", "salesman"].includes(role);
+  return typeof role === "string" && ["admin", "salesman"].includes(role);
 }
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const token = request.cookies.get("token")?.value;
 
-
-  if (["/admin", "/shop", "/salesman"].some((p) => path.startsWith(p))) {
+  if (["/admin", "/salesman"].some((p) => path.startsWith(p))) {
     if (!token) {
       return NextResponse.redirect(new URL("/", request.url));
     }
@@ -48,5 +46,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin", "/admin/:path*", "/shop", "/shop/:path*", "/salesman", "/salesman/:path*"],
+  matcher: ["/admin", "/admin/:path*", "/salesman", "/salesman/:path*"],
 };

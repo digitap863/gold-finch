@@ -7,11 +7,10 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: {
     type: String,
-    enum: ["admin", "shop", "salesman"],
+    enum: ["admin", "salesman"],
     required: true,
     default: "salesman",
   },
-  shop: { type: mongoose.Schema.Types.ObjectId, ref: "Shop", default: null },
   isVerified: { type: Boolean, default: false },
   requestStatus: {
     type: String,

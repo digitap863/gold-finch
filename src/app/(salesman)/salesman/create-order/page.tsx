@@ -1,5 +1,6 @@
 "use client"
 import React, { useRef, useState } from "react";
+import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ export default function CreateOrderPage() {
             {previews.length > 0 && (
               <div className="flex flex-wrap gap-4 mt-3">
                 {previews.map((src, idx) => (
+       
                   <div key={idx} className="relative w-24 h-24 border rounded overflow-hidden">
                     <Image src={src} alt="preview" className="object-cover w-full h-full" />
                     <button

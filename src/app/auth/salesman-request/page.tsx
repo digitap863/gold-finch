@@ -2,11 +2,10 @@
 import { useState as useReactState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useQuery } from "@tanstack/react-query";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
@@ -15,8 +14,10 @@ const validationSchema = Yup.object({
   name: Yup.string().required("Name is required"),
   mobile: Yup.string().required("Mobile is required"),
   email: Yup.string().email("Invalid email address"),
-  shop: Yup.string().required("Shop code or name is required"),
   password: Yup.string().min(6, "Password is required").required("Password is required"),
+  shopName: Yup.string().required("Shop name is required"),
+  shopAddress: Yup.string().required("Shop address is required"),
+  shopMobile: Yup.string().required("Shop mobile is required"),
 });
 
 export default function SalesmanRequestPage() {
@@ -25,25 +26,25 @@ export default function SalesmanRequestPage() {
 
   const mutation = useMutation({
     mutationFn: async (values: typeof formik.initialValues) => {
-      const res = await fetch("/api/shop/salesman-requests", {
+      const res = await fetch("/api/salesman/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || "Submission failed");
+        throw new Error(error.error || "Registration failed");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Request submitted! Pending approval by the shop owner.");
+      toast.success("Registration submitted! Pending approval by admin.");
       formik.resetForm();
       setSubmitted(true);
     },
     onError: (error: unknown) => {
       if (error instanceof Error) toast.error(error.message);
-      else toast.error("Submission failed");
+      else toast.error("Registration failed");
     },
   });
 
@@ -52,8 +53,10 @@ export default function SalesmanRequestPage() {
       name: "",
       mobile: "",
       email: "",
-      shop: "",
       password: "",
+      shopName: "",
+      shopAddress: "",
+      shopMobile: "",
     },
     validationSchema,
     onSubmit: (values) => {
@@ -61,27 +64,18 @@ export default function SalesmanRequestPage() {
     },
   });
 
-  // Fetch shops
-  const { data: shops } = useQuery({
-    queryKey: ["shops"],
-    queryFn: async () => {
-      const res = await fetch("/api/shops");
-      return res.json();
-    }
-  });
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted ">
+      <Card className="w-full max-w-lg mx-auto p-20">
         <CardHeader className="flex flex-col items-center gap-2">
-          <CardTitle className="text-2xl font-bold tracking-tight text-center">Salesman Access Request</CardTitle>
-          <CardDescription className="text-center">Fill in your details to request access as a salesman.</CardDescription>
+          <CardTitle className="text-2xl font-bold tracking-tight text-center">Salesman Registration</CardTitle>
+          <CardDescription className="text-center">Fill in your details to register as a salesman.</CardDescription>
         </CardHeader>
         <CardContent>
           {submitted ? (
             <div className="text-center py-8">
-              <div className="text-lg font-semibold mb-2">Request Submitted!</div>
-              <div className="text-muted-foreground text-sm">Your request is pending approval by the shop owner.</div>
+              <div className="text-lg font-semibold mb-2">Registration Submitted!</div>
+              <div className="text-muted-foreground text-sm">Your registration is pending approval by admin.</div>
             </div>
           ) : (
             <form onSubmit={formik.handleSubmit} className="flex flex-col gap-5 mt-2">
@@ -163,38 +157,65 @@ export default function SalesmanRequestPage() {
                   <span className="text-xs text-destructive mt-1">{formik.errors.password}</span>
                 )}
               </div>
-              <div className="flex flex-col gap-1 w-full">
-                <label htmlFor="shop" className="text-sm font-medium text-foreground">Shop Code or Shop Name</label>
-                <Select
-                  value={formik.values.shop}
-                  onValueChange={value => formik.setFieldValue("shop", value)}
+              <div className="flex flex-col gap-1">
+                <label htmlFor="shopName" className="text-sm font-medium text-foreground">Shop Name</label>
+                <Input
+                  id="shopName"
+                  name="shopName"
+                  value={formik.values.shopName}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   required
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select shop" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {shops?.map((shop: any) => (
-                      <SelectItem key={shop._id} value={shop._id} >
-                        {shop.shopName} 
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formik.touched.shop && formik.errors.shop && (
-                  <span className="text-xs text-destructive mt-1">{formik.errors.shop}</span>
+                  placeholder="Shop name"
+                  aria-invalid={formik.touched.shopName && !!formik.errors.shopName}
+                />
+                {formik.touched.shopName && formik.errors.shopName && (
+                  <span className="text-xs text-destructive mt-1">{formik.errors.shopName}</span>
+                )}
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="shopAddress" className="text-sm font-medium text-foreground">Shop Address</label>
+                <Textarea
+                  id="shopAddress"
+                  name="shopAddress"
+                  value={formik.values.shopAddress}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  required
+                  placeholder="Shop address"
+                  aria-invalid={formik.touched.shopAddress && !!formik.errors.shopAddress}
+                />
+                {formik.touched.shopAddress && formik.errors.shopAddress && (
+                  <span className="text-xs text-destructive mt-1">{formik.errors.shopAddress}</span>
+                )}
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="shopMobile" className="text-sm font-medium text-foreground">Shop Mobile</label>
+                <Input
+                  id="shopMobile"
+                  name="shopMobile"
+                  value={formik.values.shopMobile}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  required
+                  placeholder="Shop mobile number"
+                  type="tel"
+                  aria-invalid={formik.touched.shopMobile && !!formik.errors.shopMobile}
+                />
+                {formik.touched.shopMobile && formik.errors.shopMobile && (
+                  <span className="text-xs text-destructive mt-1">{formik.errors.shopMobile}</span>
                 )}
               </div>
               <CardFooter className="p-0">
-                <Button type="submit" className="w-full mt-2" disabled={formik.isSubmitting || mutation.isPending}>
-                  {mutation.isPending ? "Submitting..." : "Request Access"}
+                <Button type="submit" className="w-full mt-2" disabled={mutation.isPending}>
+                  {mutation.isPending ? "Submitting..." : "Register"}
                 </Button>
               </CardFooter>
             </form>
           )}
           {mutation.isError && (
             <div className="text-center text-destructive mt-4">
-              {mutation.error instanceof Error ? mutation.error.message : "Submission failed"}
+              {mutation.error instanceof Error ? mutation.error.message : "Registration failed"}
             </div>
           )}
         </CardContent>

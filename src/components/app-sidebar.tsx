@@ -46,18 +46,18 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Shop Requests",
-      url: "/admin/shoprequests",
+      title: "Requests",
+      url: "/admin/requests",
       icon: IconListDetails,
     },
     {
-      title: "Analytics",
-      url: "#",
+      title: "Catalogs",
+      url: "/admin/catalogs",
       icon: IconChartBar,
     },
     {
-      title: "Projects",
-      url: "#",
+      title: "Salesmen",
+      url: "/admin/salesmen",
       icon: IconFolder,
     },
     {

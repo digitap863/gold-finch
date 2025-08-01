@@ -39,7 +39,6 @@ export default function LoginPage() {
         return;
       }
       if (data.user.role === "admin") router.push("/admin");
-      else if (data.user.role === "shop") router.push("/shop");
       else if (data.user.role === "salesman") router.push("/salesman");
       else router.push("/");
     },
@@ -130,7 +129,6 @@ export default function LoginPage() {
             <h2 className="text-lg font-semibold text-center">Sign Up</h2>
             <p className="text-sm text-muted-foreground text-center">Choose how you want to get started:</p>
             <div className="flex flex-col gap-3 w-full">
-              <Button variant="outline" className="w-full" onClick={() => router.push("/auth/register")}>Register your Shop</Button>
               <Button variant="secondary" className="w-full" onClick={() => router.push("/auth/salesman-request")}>Salesman? Request Access</Button>
             </div>
           </div>

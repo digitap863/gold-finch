@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
 import User from "@/models/user";
-import Shop from "@/models/shop";
 import { jwtVerify } from "jose";
 
 async function getCurrentSalesman(req: NextRequest) {
@@ -27,18 +26,11 @@ export async function GET(req: NextRequest) {
   const user = await User.findById(userId).lean();
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  let shopName = "";
-  if (user.shop) {
-    const shop = await Shop.findById(user.shop).lean();
-    shopName = shop?.shopName || "";
-  }
-
   return NextResponse.json({
     profile: {
       name: user.name,
       email: user.email,
       mobile: user.mobile,
-      shopName,
       isVerified: user.isVerified,
     }
   });
@@ -49,16 +41,15 @@ export async function PATCH(req: NextRequest) {
   const userId = await getCurrentSalesman(req);
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { shopName } = await req.json();
+  const { name, email, mobile } = await req.json();
   const user = await User.findById(userId);
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  if (user.shop) {
-    const shop = await Shop.findById(user.shop);
-    if (shop) {
-      shop.shopName = shopName;
-      await shop.save();
-    }
-  }
+  // Update user details
+  if (name) user.name = name;
+  if (email) user.email = email;
+  if (mobile) user.mobile = mobile;
+  
+  await user.save();
   return NextResponse.json({ success: true });
 } 

@@ -13,13 +13,13 @@ async function fetchProfile() {
   return res.json();
 }
 
-async function updateShopName(shopName: string) {
+async function updateProfile(profileData: { name?: string; email?: string; mobile?: string }) {
   const res = await fetch("/api/salesman/profile", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ shopName }),
+    body: JSON.stringify(profileData),
   });
-  if (!res.ok) throw new Error("Failed to update shop name");
+  if (!res.ok) throw new Error("Failed to update profile");
   return res.json();
 }
 
@@ -28,22 +28,39 @@ export default function SalesmanProfilePage() {
     queryKey: ["salesman-profile"],
     queryFn: fetchProfile,
   });
+  
   const mutation = useMutation({
-    mutationFn: updateShopName,
+    mutationFn: updateProfile,
     onSuccess: () => {
-      toast.success("Shop name updated");
+      toast.success("Profile updated successfully");
     },
-    onError: () => toast.error("Failed to update shop name"),
+    onError: () => toast.error("Failed to update profile"),
   });
 
-  const [shopName, setShopName] = React.useState("");
+  const [formData, setFormData] = React.useState({
+    name: "",
+    email: "",
+    mobile: "",
+  });
+
   React.useEffect(() => {
-    if (data?.profile?.shopName) setShopName(data.profile.shopName);
+    if (data?.profile) {
+      setFormData({
+        name: data.profile.name || "",
+        email: data.profile.email || "",
+        mobile: data.profile.mobile || "",
+      });
+    }
   }, [data]);
 
   if (isLoading) return <div className="p-6">Loading...</div>;
   if (isError || !data?.profile) return <div className="p-6 text-destructive">Failed to load profile.</div>;
   const profile = data.profile;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(formData);
+  };
 
   return (
     <Card className="max-w-2xl mx-auto">
@@ -51,45 +68,45 @@ export default function SalesmanProfilePage() {
         <CardTitle>Salesman Profile</CardTitle>
       </CardHeader>
       <CardContent>
-        <form
-          className="space-y-6"
-          onSubmit={e => {
-            e.preventDefault();
-            mutation.mutate(shopName);
-          }}
-        >
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
-              <Input placeholder="Name" value={profile.name} disabled />
+              <Input 
+                placeholder="Name" 
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Email</label>
-              <Input placeholder="Email" value={profile.email} disabled />
+              <Input 
+                placeholder="Email" 
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Mobile</label>
-              <Input placeholder="Mobile" value={profile.mobile} disabled />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Shop Name</label>
-              <Input
-                placeholder="Shop Name"
-                value={shopName}
-                onChange={e => setShopName(e.target.value)}
-                required
-                disabled
+              <Input 
+                placeholder="Mobile" 
+                value={formData.mobile}
+                onChange={(e) => setFormData(prev => ({ ...prev, mobile: e.target.value }))}
               />
             </div>
           </div>
           <div className="flex gap-4 mt-4">
             <div>
               <span className="text-sm font-medium">Verification Status: </span>
-              <Badge variant={profile.isVerified ? "default" : "secondary"}>{profile.isVerified ? "Verified" : "Pending"}</Badge>
+              <Badge variant={profile.isVerified ? "default" : "secondary"}>
+                {profile.isVerified ? "Verified" : "Pending"}
+              </Badge>
             </div>
           </div>
           <div className="flex justify-end mt-6">
-            <Button type="submit" disabled={mutation.isPending}>Save Changes</Button>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </form>
       </CardContent>
