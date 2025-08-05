@@ -13,6 +13,7 @@ import {
   IconHelp,
   IconInnerShadowTop,
   IconListDetails,
+  IconPlus,
   IconReport,
   IconSearch,
   IconSettings,
@@ -54,6 +55,11 @@ const data = {
       title: "Catalogs",
       url: "/admin/catalogs",
       icon: IconChartBar,
+    },
+    {
+      title: "Add Catalogs",
+      url: "/admin/add-catalogs",
+      icon: IconPlus,
     },
     {
       title: "Salesmen",

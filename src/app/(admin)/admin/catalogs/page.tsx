@@ -1,275 +1,358 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Plus, Upload, X } from "lucide-react";
-import Image from 'next/image';
-import { Label } from "@/components/ui/label";
+import { Eye, Edit, Trash2, Plus, Search } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
-// Catalog form schema
-const catalogFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  size: z.string().min(1, "Size is required"),
-  weight: z.string().min(1, "Weight is required"),
-  description: z.string().optional(),
-});
+interface Catalog {
+  _id: string;
+  name: string;
+  size: string;
+  weight: number;
+  description: string;
+  images: string[];
+  files: string[];
+  createdAt: string;
+  updatedAt: string;
+}
 
-type CatalogFormValues = z.infer<typeof catalogFormSchema>;
+export default function AdminCatalogsPage() {
+  const [selectedCatalog, setSelectedCatalog] = useState<Catalog | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const queryClient = useQueryClient();
 
-const CatalogPage = () => {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const form = useForm<CatalogFormValues>({
-    resolver: zodResolver(catalogFormSchema),
-    defaultValues: {
-      name: "",
-      size: "",
-      weight: "",
-      description: "",
+  // Fetch catalogs
+  const { data: catalogs, isLoading, error } = useQuery({
+    queryKey: ["catalogs"],
+    queryFn: async (): Promise<Catalog[]> => {
+      const res = await fetch("/api/admin/catalogs");
+      if (!res.ok) {
+        throw new Error("Failed to fetch catalogs");
+      }
+      return res.json();
     },
   });
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    const newFiles = Array.from(files);
-    setSelectedFiles(prev => [...prev, ...newFiles]);
-    toast.success("Images selected successfully");
-  };
-
-  const removeImage = (index: number) => {
-    const newFiles = selectedFiles.filter((_, i) => i !== index);
-    setSelectedFiles(newFiles);
-  };
-
-  const onSubmit = async (data: CatalogFormValues) => {
-    if (selectedFiles.length === 0) {
-      toast.error("Please select at least one image");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append("name", data.name);
-      formData.append("size", data.size);
-      formData.append("weight", data.weight);
-      if (data.description) {
-        formData.append("description", data.description);
-      }
-      
-      selectedFiles.forEach((file) => {
-        formData.append("images", file);
+  // Delete catalog
+  const deleteMutation = useMutation({
+    mutationFn: async (catalogId: string) => {
+      const res = await fetch(`/api/admin/catalogs/${catalogId}`, {
+        method: "DELETE",
       });
-
-      const response = await fetch("/api/admin/catalogs", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create catalog");
+      if (!res.ok) {
+        throw new Error("Failed to delete catalog");
       }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Catalog deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["catalogs"] });
+      setIsDeleteDialogOpen(false);
+      setSelectedCatalog(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
-      await response.json();
-      toast.success("Catalog created successfully!");
-      form.reset();
-      setSelectedFiles([]);
-    } catch (error) {
-      console.error("Error creating catalog:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create catalog");
-    } finally {
-      setIsSubmitting(false);
-    }
+  // Filter catalogs based on search term
+  const filteredCatalogs = catalogs?.filter(catalog =>
+    catalog.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    catalog.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    catalog.size.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+
+  // Pagination
+  const totalPages = Math.ceil(filteredCatalogs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCatalogs = filteredCatalogs.slice(startIndex, endIndex);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
+
+  const formatWeight = (weight: number) => {
+    return `${weight} grams`;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Loading catalogs...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-destructive">Error loading catalogs</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Add New Catalog</h1>
-        <p className="text-muted-foreground">Create a new catalog item with images and details</p>
+    <div className="space-y-6 p-10">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Catalogs</h1>
+          <p className="text-muted-foreground">
+            Manage your product catalog
+          </p>
+        </div>
+        <Link href="/admin/catalogs/add">
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Catalog
+          </Button>
+        </Link>
       </div>
 
-      <Card className="max-w-2xl">
+      <Card>
         <CardHeader>
-          <CardTitle>Catalog Information</CardTitle>
+          <CardTitle>All Catalogs</CardTitle>
           <CardDescription>
-            Fill in the details for your new catalog item. All fields marked with * are required.
+            View, edit, and delete catalog items
           </CardDescription>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search catalogs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter catalog name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="size"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Size *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Small, Medium, Large" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="weight"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Weight (grams) *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="1" 
-                          placeholder="0" 
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter catalog description (optional)"
-                        className="min-h-[100px]"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Provide additional details about the catalog item
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium">Files *</Label>
-                  <div className="flex items-center gap-4 mt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('image-upload')?.click()}
-                      className="flex items-center gap-2"
-                    >
-                      <Upload className="h-4 w-4" />
-                      Select Images
-                    </Button>
-                    <input
-                      id="image-upload"
-                      type="file"
-                      multiple
-                      accept="image/*,.stl,application/octet-stream"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                  </div>
-                  <FormDescription>
-                    Upload one or more images or STL files for the catalog item
-                  </FormDescription>
-                </div>
-                
-                {selectedFiles.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {selectedFiles.map((file, index) => {
-                      const isImage = file.type.startsWith('image/');
-                      
-                      return (
-                        <div key={index} className="relative group">
-                          {isImage ? (
-                            <Image
-                              src={URL.createObjectURL(file)}
-                              alt={`Catalog image ${index + 1}`}
-                              width={200}
-                              height={128}
-                              className="w-full h-32 object-cover rounded-lg border"
-                            />
-                          ) : (
-                            <div className="w-full h-32 bg-gray-100 rounded-lg border flex items-center justify-center">
-                              <div className="text-center">
-                                <div className="text-2xl mb-1">📁</div>
-                                <div className="text-xs text-gray-600">{file.name}</div>
-                                <div className="text-xs text-gray-500">STL File</div>
+          {paginatedCatalogs.length > 0 ? (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Weight</TableHead>
+                    <TableHead>Images</TableHead>
+                    <TableHead>Files</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedCatalogs.map((catalog) => (
+                    <TableRow key={catalog._id}>
+                      <TableCell className="font-medium">{catalog.name}</TableCell>
+                      <TableCell>{catalog.size}</TableCell>
+                      <TableCell>{formatWeight(catalog.weight)}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {catalog.images?.length || 0} images
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {catalog.files?.length || 0} files
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{formatDate(catalog.createdAt)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Dialog open={isViewDialogOpen && selectedCatalog?._id === catalog._id} onOpenChange={(open: boolean) => {
+                            if (open) {
+                              setSelectedCatalog(catalog);
+                              setIsViewDialogOpen(true);
+                            } else {
+                              setIsViewDialogOpen(false);
+                              setSelectedCatalog(null);
+                            }
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle>{catalog.name}</DialogTitle>
+                                <DialogDescription>
+                                  Complete catalog details
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <h4 className="font-semibold mb-2">Basic Information</h4>
+                                  <div className="space-y-2 text-sm">
+                                    <div><span className="font-medium">Name:</span> {catalog.name}</div>
+                                    <div><span className="font-medium">Size:</span> {catalog.size}</div>
+                                    <div><span className="font-medium">Weight:</span> {formatWeight(catalog.weight)}</div>
+                                    <div><span className="font-medium">Description:</span> {catalog.description}</div>
+                                  </div>
+                                </div>
+                                
+                                {catalog.images && catalog.images.length > 0 && (
+                                  <div>
+                                    <h4 className="font-semibold mb-2">Images ({catalog.images.length})</h4>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {catalog.images.map((image, index) => (
+                                        <Image
+                                          key={index}
+                                          src={image}
+                                          alt={`${catalog.name} image ${index + 1}`}
+                                          width={100}
+                                          height={100}
+                                          className="w-full h-32 object-cover rounded-lg"
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {catalog.files && catalog.files.length > 0 && (
+                                  <div>
+                                    <h4 className="font-semibold mb-2">Files ({catalog.files.length})</h4>
+                                    <div className="space-y-2">
+                                      {catalog.files.map((file, index) => (
+                                        <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                                          <span className="text-sm">File {index + 1}</span>
+                                          <Button variant="outline" size="sm" asChild>
+                                            <a href={file} target="_blank" rel="noopener noreferrer">
+                                              Download
+                                            </a>
+                                          </Button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                <div>
+                                  <h4 className="font-semibold mb-2">Timestamps</h4>
+                                  <div className="space-y-2 text-sm">
+                                    <div><span className="font-medium">Created:</span> {formatDate(catalog.createdAt)}</div>
+                                    <div><span className="font-medium">Updated:</span> {formatDate(catalog.updatedAt)}</div>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => removeImage(index)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
+                            </DialogContent>
+                          </Dialog>
+                          
+                          <Link href={`/admin/catalogs/edit/${catalog._id}`}>
+                            <Button variant="outline" size="sm">
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                          </Link>
+                          
+                          <Dialog open={isDeleteDialogOpen && selectedCatalog?._id === catalog._id} onOpenChange={(open: boolean) => {
+                            if (open) {
+                              setSelectedCatalog(catalog);
+                              setIsDeleteDialogOpen(true);
+                            } else {
+                              setIsDeleteDialogOpen(false);
+                              setSelectedCatalog(null);
+                            }
+                          }}>
+                            <DialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Delete Catalog</DialogTitle>
+                                <DialogDescription>
+                                  Are you sure you want to delete &quot;{catalog.name}&quot;? This action cannot be undone.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setIsDeleteDialogOpen(false);
+                                    setSelectedCatalog(null);
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => deleteMutation.mutate(catalog._id)}
+                                  disabled={deleteMutation.isPending}
+                                >
+                                  {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         </div>
-                      );
-                    })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredCatalogs.length)} of {filteredCatalogs.length} catalogs
                   </div>
-                )}
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  {isSubmitting ? "Creating..." : "Create Catalog"}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => {
-                    form.reset();
-                    setSelectedFiles([]);
-                  }}
-                >
-                  Reset Form
-                </Button>
-              </div>
-            </form>
-          </Form>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              {searchTerm ? "No catalogs found matching your search" : "No catalogs found"}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
-};
-
-export default CatalogPage;
+}
