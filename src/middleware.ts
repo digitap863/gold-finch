@@ -25,16 +25,27 @@ export async function middleware(request: NextRequest) {
       const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
       const { payload } = await jwtVerify(token, secret);
       const userRole = payload.role;
-      const isVerified = payload.isVerified;
-      if (!isVerified) {
+      const isApproved = payload.isApproved;
+      const isBlocked = payload.isBlocked;
+      
+      // Check if user is blocked
+      if (isBlocked) {
         return NextResponse.redirect(new URL("/", request.url));
       }
+      
+      // Check if user is approved (for both admin and salesman)
+      if (!isApproved) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+      
       if (!userRole || !isUserRole(userRole)) {
         return NextResponse.redirect(new URL("/", request.url));
       }
+      
       if (!path.startsWith(roleDashboard[userRole as UserRole])) {
         return NextResponse.redirect(new URL(roleDashboard[userRole as UserRole] || "/", request.url));
       }
+      
       return NextResponse.next();
     } catch (e) {
       console.log(e, "error")

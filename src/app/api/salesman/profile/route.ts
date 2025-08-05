@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       name: user.name,
       email: user.email,
       mobile: user.mobile,
-      isVerified: user.isVerified,
+      isApproved: user.isApproved,
     }
   });
 }

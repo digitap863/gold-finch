@@ -66,7 +66,7 @@ export default function SalesmanRequestPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted ">
-      <Card className="w-full max-w-lg mx-auto p-20">
+      <Card className="w-full max-w-lg mx-auto p-10">
         <CardHeader className="flex flex-col items-center gap-2">
           <CardTitle className="text-2xl font-bold tracking-tight text-center">Salesman Registration</CardTitle>
           <CardDescription className="text-center">Fill in your details to register as a salesman.</CardDescription>

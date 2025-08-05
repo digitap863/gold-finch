@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
-import Salesman from "@/models/salesman";
 import User from "@/models/user";
 
 export async function PATCH(
@@ -20,37 +19,27 @@ export async function PATCH(
       );
     }
 
-    // Update salesman status
-    const updatedSalesman = await Salesman.findByIdAndUpdate(
+    // Update user status directly
+    const updatedUser = await User.findByIdAndUpdate(
       id,
-      { status },
+      { 
+        requestStatus: status,
+        isApproved: status === "approved"
+      },
       { new: true }
     );
 
-    if (!updatedSalesman) {
+    if (!updatedUser) {
       return NextResponse.json(
         { error: "Salesman request not found" },
         { status: 404 }
       );
     }
 
-    // Update corresponding user status
-    const user = await User.findOne({ 
-      mobile: updatedSalesman.mobile,
-      role: "salesman" 
-    });
-
-    if (user) {
-      await User.findByIdAndUpdate(user._id, {
-        requestStatus: status,
-        isVerified: status === "approved"
-      });
-    }
-
     return NextResponse.json({
       success: true,
       message: `Salesman request ${status} successfully`,
-      data: updatedSalesman
+      data: updatedUser
     });
   } catch (error) {
     console.error("Error updating salesman request:", error);

@@ -98,8 +98,8 @@ export default function SalesmanProfilePage() {
           <div className="flex gap-4 mt-4">
             <div>
               <span className="text-sm font-medium">Verification Status: </span>
-              <Badge variant={profile.isVerified ? "default" : "secondary"}>
-                {profile.isVerified ? "Verified" : "Pending"}
+              <Badge variant={profile.isApproved ? "default" : "secondary"}>
+                {profile.isApproved ? "Approved" : "Pending"}
               </Badge>
             </div>
           </div>

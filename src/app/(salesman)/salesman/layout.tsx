@@ -2,7 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, List, Bell, User, LogOut } from "lucide-react";
+import { Home, PlusCircle, List, Bell, User, LogOut, Package } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const sidebarLinks = [
@@ -11,6 +11,7 @@ const sidebarLinks = [
   { href: "/salesman/track-orders", label: "Track Orders", icon: <List size={18} /> },
   { href: "/salesman/notifications", label: "Notifications", icon: <Bell size={18} /> },
   { href: "/salesman/profile", label: "Profile", icon: <User size={18} /> },
+  { href: "/salesman/catalogs", label: "Catalogs", icon: <Package size={18} /> },
 ];
 
 export default function SalesmanLayout({ children }: { children: React.ReactNode }) {

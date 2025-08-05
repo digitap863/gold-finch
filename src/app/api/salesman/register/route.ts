@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connect } from "@/db.Config/db.Config";
 import User from "@/models/user";
-import Salesman from "@/models/salesman";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,28 +32,18 @@ export async function POST(req: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new user
-    const user = await User.create({
+    // Create new salesman user
+    const salesman = await User.create({
       name,
       mobile,
       email,
       password: hashedPassword,
       role: "salesman",
-      isVerified: false,
       requestStatus: "pending",
-    });
-
-    // Create new salesman record
-    const salesman = await Salesman.create({
-      name,
-      mobile,
-      email,
+      isApproved: false,
       shopName,
       shopAddress,
       shopMobile,
-      status: "pending",
-      // Note: shop field is required in the model but we don't have shop functionality
-      // You may need to update the model to make this optional or provide a default value
     });
 
     return NextResponse.json(
@@ -62,8 +51,7 @@ export async function POST(req: NextRequest) {
         success: true, 
         message: "Salesman registration successful",
         data: {
-          userId: user._id,
-          salesmanId: salesman._id
+          userId: salesman._id,
         }
       },
       { status: 201 }

@@ -18,7 +18,7 @@ interface SalesmanRequest {
   shopName: string;
   shopAddress: string;
   shopMobile: string;
-  status: "pending" | "approved" | "rejected";
+  requestStatus: "pending" | "approved" | "rejected";
   createdAt: string;
   updatedAt: string;
 }
@@ -158,7 +158,7 @@ export default function AdminRequestsPage() {
                     <TableCell className="font-medium">{request.name}</TableCell>
                     <TableCell>{request.mobile}</TableCell>
                     <TableCell>{request.shopName}</TableCell>
-                    <TableCell>{getStatusBadge(request.status)}</TableCell>
+                    <TableCell>{getStatusBadge(request.requestStatus)}</TableCell>
                     <TableCell>{formatDate(request.createdAt)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -204,7 +204,7 @@ export default function AdminRequestsPage() {
                               <div>
                                 <h4 className="font-semibold mb-2">Request Information</h4>
                                 <div className="space-y-2 text-sm">
-                                  <div><span className="font-medium">Status:</span> {getStatusBadge(request.status)}</div>
+                                  <div><span className="font-medium">Status:</span> {getStatusBadge(request.requestStatus)}</div>
                                   <div><span className="font-medium">Requested On:</span> {formatDate(request.createdAt)}</div>
                                 </div>
                               </div>
@@ -212,7 +212,7 @@ export default function AdminRequestsPage() {
                           </DialogContent>
                         </Dialog>
                         
-                        {request.status === "pending" && (
+                        {request.requestStatus === "pending" && (
                           <>
                             <Button
                               variant="default"

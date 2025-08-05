@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
     {
       userId: user._id,
       role: user.role,
-      isVerified: user.isVerified,
+      isApproved: user.isApproved,
+      isBlocked: user.isBlocked,
     },
     process.env.JWT_SECRET!,
     { expiresIn: "7d" }
@@ -37,7 +38,11 @@ export async function POST(req: NextRequest) {
   // Set token as HTTP-only cookie
   const response = NextResponse.json({
     message: "Login successful",
-    user: { role: user.role, isVerified: user.isVerified },
+    user: { 
+      role: user.role, 
+      isApproved: user.isApproved,
+      isBlocked: user.isBlocked 
+    },
   });
   response.cookies.set("token", token, {
     httpOnly: true,

@@ -1,14 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
-import Salesman from "@/models/salesman";
+import User from "@/models/user";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     await connect();
 
-    const salesmen = await Salesman.find({}).sort({ createdAt: -1 });
+    // Fetch all salesman requests (users with role "salesman" and pending status)
+    const salesmanRequests = await User.find({ 
+      role: "salesman",
+      requestStatus: "pending"
+    }).sort({ createdAt: -1 });
 
-    return NextResponse.json(salesmen);
+    return NextResponse.json(salesmanRequests);
   } catch (error) {
     console.error("Error fetching salesman requests:", error);
     return NextResponse.json(

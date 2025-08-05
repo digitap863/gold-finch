@@ -11,12 +11,18 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: "salesman",
   },
-  isVerified: { type: Boolean, default: false },
+  isBlocked: { type: Boolean, default: false },
   requestStatus: {
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
+  
+  // Salesman-specific fields
+  shopName: { type: String },
+  shopAddress: { type: String },
+  shopMobile: { type: String },
+  isApproved: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);

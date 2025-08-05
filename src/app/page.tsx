@@ -34,7 +34,7 @@ export default function LoginPage() {
       return res.json();
     },
     onSuccess: (data) => {
-      if (!data.user.isVerified) {
+      if (!data.user.isApproved) {
         toast.info("Your account is not verified yet.");
         return;
       }
