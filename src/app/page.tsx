@@ -59,8 +59,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-muted">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-muted px-4 sm:px-0">
+      <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto px-6 py-8 sm:px-8 sm:py-10 rounded-2xl shadow-lg border border-border bg-card/90 backdrop-blur-md">
         <CardHeader className="flex flex-col items-center gap-2">
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-2">
             <span className="text-2xl font-bold text-primary">GF</span>
@@ -81,6 +81,7 @@ export default function LoginPage() {
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
                 autoComplete="username"
+                className="text-base placeholder:text-sm"
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -94,7 +95,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="pr-10"
+                  className="pr-10 text-base  placeholder:text-sm"
                 />
                 <Button
                   type="button"
@@ -102,6 +103,7 @@ export default function LoginPage() {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -112,7 +114,7 @@ export default function LoginPage() {
               </div>
             </div>
             <CardFooter className="p-0">
-              <Button type="submit" className="w-full mt-2" disabled={loginMutation.isPending}>
+              <Button type="submit" className="w-full mt-2" disabled={loginMutation.isPending} size="lg">
                 {loginMutation.isPending ? "Logging in..." : "Login"}
               </Button>
             </CardFooter>
@@ -124,7 +126,7 @@ export default function LoginPage() {
           )}
         </CardContent>
       </Card>
-      <div className="mt-6 text-center">
+      <div className="mt-6 text-center w-full max-w-md">
         <span className="text-sm text-muted-foreground">Don&apos;t have an account? </span>
         <button
           className="text-sm text-primary font-medium hover:underline focus:outline-none cursor-pointer"
@@ -135,8 +137,8 @@ export default function LoginPage() {
       </div>
       {/* Modal for sign up options */}
       {showSignupModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white dark:bg-card rounded-xl shadow-lg p-8 w-full max-w-xs flex flex-col items-center gap-6 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-2 sm:px-0">
+          <div className="bg-white dark:bg-card rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-xs sm:max-w-sm flex flex-col items-center gap-6 relative">
             <button
               className="absolute top-2 right-2 text-muted-foreground hover:text-foreground text-xl font-bold"
               onClick={() => setShowSignupModal(false)}

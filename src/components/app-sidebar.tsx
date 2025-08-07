@@ -17,7 +17,9 @@ import {
   IconReport,
   IconSearch,
   IconSettings,
-  IconUsers,
+  IconShoppingCart,
+  IconPoint,
+
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -52,24 +54,35 @@ const data = {
       icon: IconListDetails,
     },
     {
-      title: "Catalogs",
-      url: "/admin/catalogs",
-      icon: IconChartBar,
-    },
-    {
       title: "Add Catalogs",
       url: "/admin/add-catalogs",
       icon: IconPlus,
     },
+    {
+      title: "All Catalogs",
+      url: "/admin/catalogs",
+      icon: IconChartBar,
+    },
+   
     {
       title: "Salesmen",
       url: "/admin/salesmen",
       icon: IconFolder,
     },
     {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
+      title: "Orders",
+      url: "/admin/orders",
+      icon: IconShoppingCart,
+    },
+    {
+      title: "Fonts",
+      url: "/admin/add-fonts",
+      icon: IconPoint,
+    },
+    {
+      title: "All Fonts",
+      url: "/admin/fonts",
+      icon: IconPoint,
     },
   ],
   navClouds: [

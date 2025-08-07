@@ -8,14 +8,16 @@ export async function POST(req: NextRequest) {
     await connect();
 
     const formData = await req.formData();
-    const name = formData.get("name") as string;
+    const title = formData.get("title") as string;
+    const style = formData.get("style") as string;
     const size = formData.get("size") as string;
     const weight = parseFloat(formData.get("weight") as string);
+    const font = formData.get("font") as string;
     const description = formData.get("description") as string;
     const files = formData.getAll("images") as File[];
 
     // Validate required fields
-    if (!name || !size || !weight || files.length === 0) {
+    if (!title || !style || !size || !weight || !font || files.length === 0) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -69,9 +71,11 @@ export async function POST(req: NextRequest) {
 
     // Create catalog in database
     const catalog = new Catalog({
-      name,
+      title,
+      style,
       size,
       weight,
+      font,
       description: description || "",
       images: imageUrls,
       files: stlUrls, // Store STL file URLs separately

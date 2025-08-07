@@ -23,6 +23,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
+  // Check if user is blocked
+  if (user.isBlocked) {
+    return NextResponse.json({ error: "Account is blocked. Please contact support." }, { status: 403 });
+  }
+
+  // Check if user is approved (for salesmen)
+  if (user.role === "salesman" && !user.isApproved) {
+    return NextResponse.json({ error: "Account is pending approval. Please wait for admin approval." }, { status: 403 });
+  }
+
   // Create JWT
   const token = jwt.sign(
     {

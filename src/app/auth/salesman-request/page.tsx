@@ -9,6 +9,7 @@ import * as Yup from "yup";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 
 const validationSchema = Yup.object({
   name: Yup.string().required("Name is required"),
@@ -65,8 +66,8 @@ export default function SalesmanRequestPage() {
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted ">
-      <Card className="w-full max-w-lg mx-auto p-10">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-muted p-2 sm:px-4 md:px-8">
+      <Card className="w-full max-w-sm sm:max-w-md md:max-w-xl  mx-auto px-6 py-8 sm:px-8 sm:py-10 rounded-2xl shadow-lg border border-border bg-card/90 backdrop-blur-md">
         <CardHeader className="flex flex-col items-center gap-2">
           <CardTitle className="text-2xl font-bold tracking-tight text-center">Salesman Registration</CardTitle>
           <CardDescription className="text-center">Fill in your details to register as a salesman.</CardDescription>
@@ -78,7 +79,7 @@ export default function SalesmanRequestPage() {
               <div className="text-muted-foreground text-sm">Your registration is pending approval by admin.</div>
             </div>
           ) : (
-            <form onSubmit={formik.handleSubmit} className="flex flex-col gap-5 mt-2">
+            <form onSubmit={formik.handleSubmit} className="flex flex-col gap-6 mt-2">
               <div className="flex flex-col gap-1">
                 <label htmlFor="name" className="text-sm font-medium text-foreground">Name</label>
                 <Input
@@ -90,6 +91,7 @@ export default function SalesmanRequestPage() {
                   required
                   placeholder="Your name"
                   aria-invalid={formik.touched.name && !!formik.errors.name}
+                  className="text-base  placeholder:text-sm"
                 />
                 {formik.touched.name && formik.errors.name && (
                   <span className="text-xs text-destructive mt-1">{formik.errors.name}</span>
@@ -107,6 +109,7 @@ export default function SalesmanRequestPage() {
                   placeholder="Mobile number"
                   type="tel"
                   aria-invalid={formik.touched.mobile && !!formik.errors.mobile}
+                  className="text-base  placeholder:text-sm"
                 />
                 {formik.touched.mobile && formik.errors.mobile && (
                   <span className="text-xs text-destructive mt-1">{formik.errors.mobile}</span>
@@ -123,6 +126,7 @@ export default function SalesmanRequestPage() {
                   placeholder="Email address"
                   type="email"
                   aria-invalid={formik.touched.email && !!formik.errors.email}
+                  className="text-base  placeholder:text-sm"
                 />
                 {formik.touched.email && formik.errors.email && (
                   <span className="text-xs text-destructive mt-1">{formik.errors.email}</span>
@@ -141,7 +145,7 @@ export default function SalesmanRequestPage() {
                     required
                     placeholder="Password"
                     aria-invalid={formik.touched.password && !!formik.errors.password}
-                    className="pr-10"
+                    className="pr-10 text-base  placeholder:text-sm"
                   />
                   <button
                     type="button"
@@ -168,6 +172,7 @@ export default function SalesmanRequestPage() {
                   required
                   placeholder="Shop name"
                   aria-invalid={formik.touched.shopName && !!formik.errors.shopName}
+                  className="text-base  placeholder:text-sm"
                 />
                 {formik.touched.shopName && formik.errors.shopName && (
                   <span className="text-xs text-destructive mt-1">{formik.errors.shopName}</span>
@@ -184,6 +189,7 @@ export default function SalesmanRequestPage() {
                   required
                   placeholder="Shop address"
                   aria-invalid={formik.touched.shopAddress && !!formik.errors.shopAddress}
+                  className="text-base  placeholder:text-sm"
                 />
                 {formik.touched.shopAddress && formik.errors.shopAddress && (
                   <span className="text-xs text-destructive mt-1">{formik.errors.shopAddress}</span>
@@ -201,13 +207,14 @@ export default function SalesmanRequestPage() {
                   placeholder="Shop mobile number"
                   type="tel"
                   aria-invalid={formik.touched.shopMobile && !!formik.errors.shopMobile}
+                  className="text-base  placeholder:text-sm"
                 />
                 {formik.touched.shopMobile && formik.errors.shopMobile && (
                   <span className="text-xs text-destructive mt-1">{formik.errors.shopMobile}</span>
                 )}
               </div>
               <CardFooter className="p-0">
-                <Button type="submit" className="w-full mt-2" disabled={mutation.isPending}>
+                <Button type="submit" className="w-full mt-2" disabled={mutation.isPending} size="lg">
                   {mutation.isPending ? "Submitting..." : "Register"}
                 </Button>
               </CardFooter>
@@ -220,6 +227,12 @@ export default function SalesmanRequestPage() {
           )}
         </CardContent>
       </Card>
+      <div className="mt-6 text-center w-full max-w-sm mx-auto">
+        <span className="text-sm text-muted-foreground">Already have an account? </span>
+        <Link href="/" className="text-sm text-primary font-medium hover:underline focus:outline-none cursor-pointer">
+          Login
+        </Link>
+      </div>
     </div>
   );
 } 

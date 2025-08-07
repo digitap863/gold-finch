@@ -63,53 +63,68 @@ export default function SalesmanProfilePage() {
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Salesman Profile</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Name</label>
-              <Input 
-                placeholder="Name" 
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              />
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Profile</h1>
+        <p className="text-muted-foreground">Manage your account information</p>
+      </div>
+
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle className="text-lg md:text-xl">Salesman Profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Name</label>
+                <Input 
+                  placeholder="Name" 
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Email</label>
+                <Input 
+                  placeholder="Email" 
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Mobile</label>
+                <Input 
+                  placeholder="Mobile" 
+                  value={formData.mobile}
+                  onChange={(e) => setFormData(prev => ({ ...prev, mobile: e.target.value }))}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
-              <Input 
-                placeholder="Email" 
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              />
+            
+            <div className="flex flex-col sm:flex-row gap-4 mt-4 p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Verification Status:</span>
+                <Badge variant={profile.isApproved ? "default" : "secondary"}>
+                  {profile.isApproved ? "Approved" : "Pending"}
+                </Badge>
+              </div>
+              {!profile.isApproved && (
+                <p className="text-sm text-muted-foreground">
+                  Your account is pending admin approval. You'll be notified once approved.
+                </p>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Mobile</label>
-              <Input 
-                placeholder="Mobile" 
-                value={formData.mobile}
-                onChange={(e) => setFormData(prev => ({ ...prev, mobile: e.target.value }))}
-              />
+            
+            <div className="flex justify-end pt-4">
+              <Button type="submit" disabled={mutation.isPending} className="w-full sm:w-auto">
+                {mutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
             </div>
-          </div>
-          <div className="flex gap-4 mt-4">
-            <div>
-              <span className="text-sm font-medium">Verification Status: </span>
-              <Badge variant={profile.isApproved ? "default" : "secondary"}>
-                {profile.isApproved ? "Approved" : "Pending"}
-              </Badge>
-            </div>
-          </div>
-          <div className="flex justify-end mt-6">
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 } 

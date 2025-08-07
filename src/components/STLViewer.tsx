@@ -75,19 +75,23 @@ function Loader() {
 
 const STLViewer: React.FC<STLViewerProps> = ({ 
   url, 
-  width = 300, 
-  height = 200, 
   className = "" 
 }) => {
   return (
     <div 
-      className={`border rounded-lg overflow-hidden ${className}`}
-      style={{ width, height }}
+      className={`border rounded-lg overflow-hidden bg-gray-50 ${className}`}
+      style={{ 
+        width: '100%', 
+        height: '100%',
+        minHeight: '300px',
+        aspectRatio: '16/9'
+      }}
     >
       <Canvas
         shadows
         camera={{ position: [0, 0, 120], fov: 45 }}
         gl={{ antialias: true }}
+        style={{ width: '100%', height: '100%' }}
       >
         <ambientLight intensity={0.6} color="#FFF8DC" />
         <directionalLight
@@ -119,7 +123,11 @@ const STLViewer: React.FC<STLViewerProps> = ({
           enablePan={true}
           enableRotate={true}
           autoRotate={true}
-          autoRotateSpeed={2.0}
+          autoRotateSpeed={1.5}
+          minDistance={50}
+          maxDistance={200}
+          minPolarAngle={0}
+          maxPolarAngle={Math.PI}
         />
         <Suspense fallback={<Loader />}>
           <Model url={url} />

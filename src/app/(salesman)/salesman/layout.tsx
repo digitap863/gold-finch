@@ -1,9 +1,11 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Home, PlusCircle, List, Bell, User, LogOut, Package } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Home, PlusCircle, List, Bell, User, LogOut, Package, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const sidebarLinks = [
   { href: "/salesman", label: "Dashboard", icon: <Home size={18} /> },
@@ -16,28 +18,54 @@ const sidebarLinks = [
 
 export default function SalesmanLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const SidebarContent = () => (
+    <>
+      <div className="text-xl font-bold mb-4">Salesman Dashboard</div>
+      {sidebarLinks.map((link) => (
+        <Link key={link.href} href={link.href} onClick={() => isMobile && setSidebarOpen(false)}>
+          <Button
+            variant={pathname === link.href ? 'secondary' : 'ghost'}
+            className="w-full justify-start flex items-center gap-2"
+          >
+            {link.icon}
+            {link.label}
+          </Button>
+        </Link>
+      ))}
+      <div className="mt-auto pt-4">
+        <Button variant="destructive" className="w-full flex items-center gap-2">
+          <LogOut size={18} /> Logout
+        </Button>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex min-h-screen">
-      <aside className="w-64 bg-muted border-r p-4 flex flex-col gap-2">
-        <div className="text-xl font-bold mb-4">Salesman Dashboard</div>
-        {sidebarLinks.map((link) => (
-          <Link key={link.href} href={link.href}>
-            <Button
-              variant={pathname === link.href ? 'secondary' : 'ghost'}
-              className="w-full justify-start flex items-center gap-2"
-            >
-              {link.icon}
-              {link.label}
-            </Button>
-          </Link>
-        ))}
-        <div className="mt-auto pt-4">
-          <Button variant="destructive" className="w-full flex items-center gap-2">
-            <LogOut size={18} /> Logout
-          </Button>
-        </div>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 bg-muted border-r p-4 flex-col gap-2">
+        <SidebarContent />
       </aside>
-      <main className="flex-1 p-8 bg-background overflow-y-auto">{children}</main>
+
+      {/* Mobile Sidebar */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="sm" className="md:hidden fixed top-4 left-4 z-50">
+            <Menu size={20} />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-64 p-4">
+          <SidebarContent />
+        </SheetContent>
+      </Sheet>
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 md:p-8 bg-background overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 } 
