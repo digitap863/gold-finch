@@ -8,6 +8,8 @@ import {
   IconUserCircle,
 } from "@tabler/icons-react"
 import { useRouter } from "next/navigation"
+import { useMutation } from "@tanstack/react-query"
+import { toast } from "sonner"
 
 import {
   Avatar,
@@ -42,13 +44,33 @@ export function NavUser({
   const { isMobile } = useSidebar()
   const router = useRouter()
 
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        throw new Error("Logout failed");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Logged out successfully");
+      router.push("/");
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        toast.error(error.message || "Logout failed");
+      } else {
+        toast.error("Logout failed");
+      }
+    },
+  });
+
   const handleLogout = () => {
-    // Clear the token cookie
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-    
-    // Redirect to home page
-    router.push("/")
-  }
+    logoutMutation.mutate();
+  };
 
   return (
     <SidebarMenu>

@@ -125,7 +125,7 @@ const CatalogsPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 mt-10">
         <h1 className="text-2xl md:text-3xl font-bold">Catalogs</h1>
         <p className="text-muted-foreground">Browse available catalog items</p>
       </div>

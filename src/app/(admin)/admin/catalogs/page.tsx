@@ -9,18 +9,21 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Eye, Edit, Trash2, Plus, Search } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Search, Download } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import STLViewer from '@/components/STLViewer';
 
 interface Catalog {
   _id: string;
-  name: string;
+  title: string;
+  style: string;
   size: string;
   weight: number;
   description: string;
   images: string[];
   files: string[];
+  font?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,7 +73,7 @@ export default function AdminCatalogsPage() {
 
   // Filter catalogs based on search term
   const filteredCatalogs = catalogs?.filter(catalog =>
-    catalog.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    catalog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     catalog.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     catalog.size.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
@@ -81,18 +84,18 @@ export default function AdminCatalogsPage() {
   const endIndex = startIndex + itemsPerPage;
   const paginatedCatalogs = filteredCatalogs.slice(startIndex, endIndex);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const formatWeight = (weight: number) => {
     return `${weight} grams`;
+  };
+
+  const handleDownloadSTL = (fileUrl: string, fileName: string) => {
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('STL file download started');
   };
 
   if (isLoading) {
@@ -157,14 +160,13 @@ export default function AdminCatalogsPage() {
                     <TableHead>Weight</TableHead>
                     <TableHead>Images</TableHead>
                     <TableHead>Files</TableHead>
-                    <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedCatalogs.map((catalog) => (
                     <TableRow key={catalog._id}>
-                      <TableCell className="font-medium">{catalog.name}</TableCell>
+                      <TableCell className="font-medium">{catalog.title}</TableCell>
                       <TableCell>{catalog.size}</TableCell>
                       <TableCell>{formatWeight(catalog.weight)}</TableCell>
                       <TableCell>
@@ -177,7 +179,6 @@ export default function AdminCatalogsPage() {
                           {catalog.files?.length || 0} files
                         </Badge>
                       </TableCell>
-                      <TableCell>{formatDate(catalog.createdAt)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Dialog open={isViewDialogOpen && selectedCatalog?._id === catalog._id} onOpenChange={(open: boolean) => {
@@ -197,7 +198,7 @@ export default function AdminCatalogsPage() {
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                               <DialogHeader>
-                                <DialogTitle>{catalog.name}</DialogTitle>
+                                <DialogTitle>{catalog.title}</DialogTitle>
                                 <DialogDescription>
                                   Complete catalog details
                                 </DialogDescription>
@@ -206,7 +207,7 @@ export default function AdminCatalogsPage() {
                                 <div>
                                   <h4 className="font-semibold mb-2">Basic Information</h4>
                                   <div className="space-y-2 text-sm">
-                                    <div><span className="font-medium">Name:</span> {catalog.name}</div>
+                                    <div><span className="font-medium">Title:</span> {catalog.title}</div>
                                     <div><span className="font-medium">Size:</span> {catalog.size}</div>
                                     <div><span className="font-medium">Weight:</span> {formatWeight(catalog.weight)}</div>
                                     <div><span className="font-medium">Description:</span> {catalog.description}</div>
@@ -221,7 +222,7 @@ export default function AdminCatalogsPage() {
                                         <Image
                                           key={index}
                                           src={image}
-                                          alt={`${catalog.name} image ${index + 1}`}
+                                          alt={`${catalog.title} image ${index + 1}`}
                                           width={100}
                                           height={100}
                                           className="w-full h-32 object-cover rounded-lg"
@@ -233,29 +234,57 @@ export default function AdminCatalogsPage() {
                                 
                                 {catalog.files && catalog.files.length > 0 && (
                                   <div>
-                                    <h4 className="font-semibold mb-2">Files ({catalog.files.length})</h4>
-                                    <div className="space-y-2">
+                                    <h4 className="font-semibold mb-2">3D Models ({catalog.files.length})</h4>
+                                    <div className="space-y-4">
                                       {catalog.files.map((file, index) => (
-                                        <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                                          <span className="text-sm">File {index + 1}</span>
-                                          <Button variant="outline" size="sm" asChild>
-                                            <a href={file} target="_blank" rel="noopener noreferrer">
-                                              Download
-                                            </a>
-                                          </Button>
+                                        <div key={index} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                                          {/* File Header */}
+                                          <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center space-x-3">
+                                              <div className="p-2 bg-blue-100 rounded-lg">
+                                                <Download className="h-5 w-5 text-blue-600" />
+                                              </div>
+                                              <div>
+                                                <h4 className="font-semibold text-gray-900">
+                                                  {catalog.title} - Model {index + 1}
+                                                </h4>
+                                                <p className="text-sm text-gray-500">STL 3D Model</p>
+                                              </div>
+                                            </div>
+                                            <Button
+                                              variant="default"
+                                              size="sm"
+                                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                                              onClick={() => handleDownloadSTL(file, `${catalog.title}_${index + 1}.stl`)}
+                                            >
+                                              <Download className="h-4 w-4 mr-2" />
+                                              Download STL
+                                            </Button>
+                                          </div>
+                                          
+                                          {/* 3D Viewer */}
+                                          <div className="relative">
+                                            <div className="h-80 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200">
+                                              <STLViewer 
+                                                url={file} 
+                                                className="w-full h-full"
+                                              />
+                                            </div>
+                                            
+                                            {/* Viewer Controls Info */}
+                                            <div className="mt-3 text-center">
+                                              <p className="text-xs text-gray-500">
+                                                💡 Drag to rotate • Scroll to zoom • Right-click to pan
+                                              </p>
+                                            </div>
+                                          </div>
                                         </div>
                                       ))}
                                     </div>
                                   </div>
                                 )}
                                 
-                                <div>
-                                  <h4 className="font-semibold mb-2">Timestamps</h4>
-                                  <div className="space-y-2 text-sm">
-                                    <div><span className="font-medium">Created:</span> {formatDate(catalog.createdAt)}</div>
-                                    <div><span className="font-medium">Updated:</span> {formatDate(catalog.updatedAt)}</div>
-                                  </div>
-                                </div>
+
                               </div>
                             </DialogContent>
                           </Dialog>
@@ -286,7 +315,7 @@ export default function AdminCatalogsPage() {
                               <DialogHeader>
                                 <DialogTitle>Delete Catalog</DialogTitle>
                                 <DialogDescription>
-                                  Are you sure you want to delete &quot;{catalog.name}&quot;? This action cannot be undone.
+                                  Are you sure you want to delete &quot;{catalog.title}&quot;? This action cannot be undone.
                                 </DialogDescription>
                               </DialogHeader>
                               <div className="flex justify-end gap-2">

@@ -1,17 +1,130 @@
 "use client"
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mic, X, Upload, Plus } from "lucide-react";
+import { Mic, X, Upload, Plus, Square, Play, Trash2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+
+interface CatalogDetail {
+  _id: string;
+  title?: string;
+  style?: string;
+  size?: string;
+  weight?: number;
+  description?: string;
+  images?: string[];
+  files?: string[];
+}
 
 export default function CreateOrderPage() {
-  const [images, setImages] = useState<File[]>([]);
+  const [, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [productName, setProductName] = useState<string>("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string>("");
+  const [isPlaying, setIsPlaying] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const searchParams = useSearchParams();
+  const catalogId = searchParams.get("catalogId");
+
+  useEffect(() => {
+    if (!catalogId) return;
+    const fetchCatalog = async () => {
+      try {
+        const res = await fetch(`/api/admin/catalogs/${catalogId}`);
+        if (!res.ok) return;
+        const data: CatalogDetail = await res.json();
+        if (data?.title) {
+          setProductName(data.title);
+        }
+      } catch {
+        // silently ignore for now
+      }
+    };
+    fetchCatalog();
+  }, [catalogId]);
+
+  // Timer effect for recording
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      
+      const chunks: Blob[] = [];
+      mediaRecorder.ondataavailable = (event) => {
+        chunks.push(event.data);
+      };
+      
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/wav' });
+        setAudioBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const playAudio = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play();
+        setIsPlaying(true);
+      }
+    }
+  };
+
+  const deleteAudio = () => {
+    setAudioBlob(null);
+    setAudioUrl("");
+    setRecordingTime(0);
+    setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -30,7 +143,7 @@ export default function CreateOrderPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 mt-10">
         <h1 className="text-2xl md:text-3xl font-bold">Create New Order</h1>
         <p className="text-muted-foreground">Submit a new order request</p>
       </div>
@@ -44,7 +157,12 @@ export default function CreateOrderPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="product">Product Name</Label>
-                <Input id="product" placeholder="e.g., Gold Ring" />
+                <Input
+                  id="product"
+                  placeholder="e.g., Gold Ring"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customer">Customer Name</Label>
@@ -66,13 +184,83 @@ export default function CreateOrderPage() {
               />
             </div>
             
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <Button type="button" variant="outline" className="flex items-center gap-2">
-                <Mic size={18} /> 
-                <span className="hidden sm:inline">Record Voice</span>
-                <span className="sm:hidden">Voice</span>
-              </Button>
-              <span className="text-xs text-muted-foreground">(Optional)</span>
+            {/* Voice Recording Section */}
+            <div className="space-y-4">
+              <Label>Voice Recording</Label>
+              
+              {!audioBlob ? (
+                <div className="flex items-center gap-3">
+                  <Button 
+                    type="button" 
+                    variant={isRecording ? "destructive" : "outline"}
+                    className={`flex items-center gap-2 transition-all duration-200 ${
+                      isRecording ? 'animate-pulse bg-red-500 hover:bg-red-600' : ''
+                    }`}
+                    onClick={isRecording ? stopRecording : startRecording}
+                  >
+                    {isRecording ? (
+                      <>
+                        <Square size={18} />
+                        <span>Stop Recording</span>
+                      </>
+                    ) : (
+                      <>
+                        <Mic size={18} /> 
+                        <span>Start Recording</span>
+                      </>
+                    )}
+                  </Button>
+                  
+                  {isRecording && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                      <span className="text-sm font-mono text-red-600">{formatTime(recordingTime)}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={playAudio}
+                    className="flex items-center gap-2"
+                  >
+                    <Play size={16} />
+                    {isPlaying ? 'Pause' : 'Play'}
+                  </Button>
+                  
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Voice Message</div>
+                    <div className="text-xs text-gray-500">{formatTime(recordingTime)}</div>
+                  </div>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={deleteAudio}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
+              )}
+              
+              {audioBlob && (
+                <audio
+                  ref={audioRef}
+                  src={audioUrl}
+                  onEnded={() => setIsPlaying(false)}
+                  onPause={() => setIsPlaying(false)}
+                  onPlay={() => setIsPlaying(true)}
+                />
+              )}
             </div>
             
             <div className="space-y-4">

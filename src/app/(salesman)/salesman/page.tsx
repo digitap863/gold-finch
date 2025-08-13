@@ -1,13 +1,14 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function SalesmanDashboardHome() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 mt-10">
         <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome to your salesman dashboard</p>
+        <p className="text-muted-foreground">Welcome to your dashboard</p>
       </div>
 
       {/* Stats Grid */}
@@ -47,6 +48,7 @@ export default function SalesmanDashboardHome() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105">
             <CardContent className="p-4">
+              <Link href="/salesman/create-order">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,10 +60,12 @@ export default function SalesmanDashboardHome() {
                   <p className="text-sm text-muted-foreground">Start a new order</p>
                 </div>
               </div>
+              </Link>
             </CardContent>
           </Card>
           <Card className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105">
             <CardContent className="p-4">
+              <Link href="/salesman/track-orders">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,10 +77,12 @@ export default function SalesmanDashboardHome() {
                   <p className="text-sm text-muted-foreground">Monitor order status</p>
                 </div>
               </div>
+              </Link>
             </CardContent>
           </Card>
           <Card className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105 sm:col-span-2 lg:col-span-1">
             <CardContent className="p-4">
+              <Link href="/salesman/catalogs">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,6 +94,7 @@ export default function SalesmanDashboardHome() {
                   <p className="text-sm text-muted-foreground">View available items</p>
                 </div>
               </div>
+              </Link>
             </CardContent>
           </Card>
         </div>

@@ -1,6 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Home, PlusCircle, List, Bell, User, LogOut, Package, Menu } from "lucide-react";
@@ -20,10 +23,39 @@ export default function SalesmanLayout({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        throw new Error("Logout failed");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Logged out successfully");
+      router.push("/");
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        toast.error(error.message || "Logout failed");
+      } else {
+        toast.error("Logout failed");
+      }
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   const SidebarContent = () => (
     <>
-      <div className="text-xl font-bold mb-4">Salesman Dashboard</div>
+      <div className="text-xl font-bold mb-4">Dashboard</div>
       {sidebarLinks.map((link) => (
         <Link key={link.href} href={link.href} onClick={() => isMobile && setSidebarOpen(false)}>
           <Button
@@ -36,8 +68,14 @@ export default function SalesmanLayout({ children }: { children: React.ReactNode
         </Link>
       ))}
       <div className="mt-auto pt-4">
-        <Button variant="destructive" className="w-full flex items-center gap-2">
-          <LogOut size={18} /> Logout
+        <Button 
+          variant="destructive" 
+          className="w-full flex items-center gap-2"
+          onClick={handleLogout}
+          disabled={logoutMutation.isPending}
+        >
+          <LogOut size={18} /> 
+          {logoutMutation.isPending ? "Logging out..." : "Logout"}
         </Button>
       </div>
     </>
