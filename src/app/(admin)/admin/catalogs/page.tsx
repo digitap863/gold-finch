@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,14 +28,47 @@ interface Catalog {
   updatedAt: string;
 }
 
+interface Font {
+  _id: string;
+  name: string;
+  files: string[];
+}
+
 export default function AdminCatalogsPage() {
   const [selectedCatalog, setSelectedCatalog] = useState<Catalog | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [fonts, setFonts] = useState<Font[]>([]);
   const itemsPerPage = 10;
   const queryClient = useQueryClient();
+
+  // Fetch fonts
+  useEffect(() => {
+    const fetchFonts = async () => {
+      try {
+        const res = await fetch('/api/admin/fonts');
+        const data = await res.json();
+        setFonts(data.fonts || []);
+      } catch {
+        setFonts([]);
+      }
+    };
+    fetchFonts();
+  }, []);
+
+  // Dynamically inject @font-face for each font
+  useEffect(() => {
+    fonts.forEach((font) => {
+      if (!font.files?.length) return;
+      const fontUrl = font.files[0];
+      const fontFace = new FontFace(font.name, `url(${fontUrl})`);
+      fontFace.load().then((loadedFace) => {
+        document.fonts.add(loadedFace);
+      });
+    });
+  }, [fonts]);
 
   // Fetch catalogs
   const { data: catalogs, isLoading, error } = useQuery({
@@ -75,7 +108,8 @@ export default function AdminCatalogsPage() {
   const filteredCatalogs = catalogs?.filter(catalog =>
     catalog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     catalog.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    catalog.size.toLowerCase().includes(searchTerm.toLowerCase())
+    catalog.size.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    catalog.style.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   // Pagination
@@ -156,19 +190,37 @@ export default function AdminCatalogsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
+                    <TableHead>Style</TableHead>
                     <TableHead>Size</TableHead>
                     <TableHead>Weight</TableHead>
+                    <TableHead>Font</TableHead>
                     <TableHead>Images</TableHead>
                     <TableHead>Files</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedCatalogs.map((catalog) => (
+                  {paginatedCatalogs.map((catalog) => {
+                    const catalogFont = fonts.find(f => f._id === catalog.font);
+                    return (
                     <TableRow key={catalog._id}>
                       <TableCell className="font-medium">{catalog.title}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                          {catalog.style}
+                        </Badge>
+                      </TableCell>
                       <TableCell>{catalog.size}</TableCell>
                       <TableCell>{formatWeight(catalog.weight)}</TableCell>
+                      <TableCell>
+                        {catalogFont ? (
+                          <Badge variant="outline" style={{ fontFamily: catalogFont.name }}>
+                            {catalogFont.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No font</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="secondary">
                           {catalog.images?.length || 0} images
@@ -208,8 +260,19 @@ export default function AdminCatalogsPage() {
                                   <h4 className="font-semibold mb-2">Basic Information</h4>
                                   <div className="space-y-2 text-sm">
                                     <div><span className="font-medium">Title:</span> {catalog.title}</div>
+                                    <div><span className="font-medium">Style:</span> <Badge variant="secondary" className="bg-blue-100 text-blue-700 ml-2">{catalog.style}</Badge></div>
                                     <div><span className="font-medium">Size:</span> {catalog.size}</div>
                                     <div><span className="font-medium">Weight:</span> {formatWeight(catalog.weight)}</div>
+                                    <div><span className="font-medium">Font:</span> {(() => {
+                                      const catalogFont = fonts.find(f => f._id === catalog.font);
+                                      return catalogFont ? (
+                                        <Badge variant="outline" className="ml-2" style={{ fontFamily: catalogFont.name }}>
+                                          {catalogFont.name}
+                                        </Badge>
+                                      ) : (
+                                        <span className="text-muted-foreground ml-2">No font assigned</span>
+                                      );
+                                    })()}</div>
                                     <div><span className="font-medium">Description:</span> {catalog.description}</div>
                                   </div>
                                 </div>
@@ -341,7 +404,8 @@ export default function AdminCatalogsPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
               

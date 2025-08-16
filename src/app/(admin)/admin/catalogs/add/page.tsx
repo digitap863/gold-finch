@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
@@ -15,29 +16,54 @@ import { ArrowLeft, Upload, X } from "lucide-react";
 import Link from "next/link";
 
 const catalogFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  title: z.string().min(1, "Title is required"),
+  style: z.string().min(1, "Style is required"),
   size: z.string().min(1, "Size is required"),
   weight: z.string().min(1, "Weight is required"),
+  font: z.string().min(1, "Font is required"),
   description: z.string().min(1, "Description is required"),
 });
 
 type CatalogFormData = z.infer<typeof catalogFormSchema>;
 
+interface Font {
+  _id: string;
+  name: string;
+  files: string[];
+}
+
 export default function AddCatalogPage() {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [fonts, setFonts] = useState<Font[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const form = useForm<CatalogFormData>({
     resolver: zodResolver(catalogFormSchema),
     defaultValues: {
-      name: "",
+      title: "",
+      style: "",
       size: "",
       weight: "",
+      font: "",
       description: "",
     },
   });
+
+  // Fetch fonts
+  useEffect(() => {
+    const fetchFonts = async () => {
+      try {
+        const res = await fetch('/api/admin/fonts');
+        const data = await res.json();
+        setFonts(data.fonts || []);
+      } catch {
+        setFonts([]);
+      }
+    };
+    fetchFonts();
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -66,9 +92,11 @@ export default function AddCatalogPage() {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append("name", data.name);
+      formData.append("title", data.title);
+      formData.append("style", data.style);
       formData.append("size", data.size);
       formData.append("weight", data.weight);
+      formData.append("font", data.font);
       formData.append("description", data.description);
 
       // Add all selected images and files
@@ -125,12 +153,26 @@ export default function AddCatalogPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="name"
+                name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name *</FormLabel>
+                    <FormLabel>Title *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter catalog name" {...field} />
+                      <Input placeholder="Enter catalog title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="style"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Style *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter style (e.g., Modern, Classic)" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,6 +207,31 @@ export default function AddCatalogPage() {
                         {...field}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="font"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Font *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a font" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {fonts.map((font) => (
+                          <SelectItem key={font._id} value={font._id}>
+                            {font.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

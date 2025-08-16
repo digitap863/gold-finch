@@ -8,9 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Search, Eye, Download, Package, ShoppingCart } from "lucide-react";
+import { Search, Eye, Package, ShoppingCart } from "lucide-react";
 import Image from 'next/image';
-import STLViewer from '@/components/STLViewer';
+import { useRouter } from 'next/navigation';
 
 interface Catalog {
   _id: string;
@@ -32,11 +32,11 @@ interface Font {
 }
 
 const CatalogsPage = () => {
+  const router = useRouter();
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sizeFilter, setSizeFilter] = useState('all');
-  const [selectedCatalog, setSelectedCatalog] = useState<Catalog | null>(null);
   const [fonts, setFonts] = useState<Font[]>([]);
 
   useEffect(() => {
@@ -91,7 +91,7 @@ const CatalogsPage = () => {
   });
 
   const handleViewCatalog = (catalog: Catalog) => {
-    setSelectedCatalog(catalog);
+    router.push(`/salesman/catalogs/${catalog._id}`);
   };
 
   const handleOrderNow = (catalog: Catalog) => {
@@ -99,15 +99,7 @@ const CatalogsPage = () => {
     window.location.href = `/salesman/create-order?catalogId=${catalog._id}`;
   };
 
-  const handleDownloadSTL = (fileUrl: string, fileName: string) => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('STL file download started');
-  };
+
 
   if (loading) {
     return (
@@ -172,10 +164,7 @@ const CatalogsPage = () => {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle
-                        className="text-lg font-semibold text-gray-900"
-                        style={catalogFont ? { fontFamily: catalogFont.name } : {}}
-                      >
+                      <CardTitle className="text-lg font-semibold text-gray-900">
                         {catalog.title}
                       </CardTitle>
                       <CardDescription className="mt-1 text-gray-600">
@@ -209,9 +198,21 @@ const CatalogsPage = () => {
                   {/* Catalog Details */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Style:</span>
+                      <span className="font-medium text-gray-900">{catalog.style}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Weight:</span>
                       <span className="font-medium text-gray-900">{catalog.weight}g</span>
                     </div>
+                    {catalogFont && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Font:</span>
+                        <span className="font-medium text-gray-900" style={{ fontFamily: catalogFont.name }}>
+                          {catalogFont.name}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Action Buttons */}
@@ -219,7 +220,7 @@ const CatalogsPage = () => {
                     <Button
                       variant="default"
                       size="default"
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-base font-semibold"
+                      className="w-full bg-black hover:bg-black/80 text-white h-12 text-base font-semibold"
                       onClick={() => handleOrderNow(catalog)}
                     >
                       <ShoppingCart className="h-5 w-5 mr-2" />
@@ -240,140 +241,7 @@ const CatalogsPage = () => {
             );
           })}
         </div>
-      )}
-
-      {/* Catalog Detail Modal */}
-      {selectedCatalog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold">{selectedCatalog.title}</h2>
-                  <p className="text-muted-foreground">{selectedCatalog.description}</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedCatalog(null)}
-                >
-                  ✕
-                </Button>
-              </div>
-
-              {/* Images Gallery */}
-              {selectedCatalog.images && selectedCatalog.images.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3">Images</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {selectedCatalog.images.map((image, index) => (
-                      <div key={index} className="relative h-32 bg-gray-100 rounded-lg overflow-hidden">
-                        <Image
-                          src={image}
-                          alt={`${selectedCatalog.title} image ${index + 1}`}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* STL Files - Only shown in detail view */}
-              {selectedCatalog.files && selectedCatalog.files.length > 0 && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">3D Models</h3>
-                    <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                      {selectedCatalog.files.length} file{selectedCatalog.files.length > 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-                  <div className="space-y-6">
-                    {selectedCatalog.files.map((file, index) => (
-                      <div key={index} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                        {/* File Header */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                              <Package className="h-5 w-5 text-blue-600" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">
-                                {selectedCatalog.title} - Model {index + 1}
-                              </h4>
-                              <p className="text-sm text-gray-500">STL 3D Model</p>
-                            </div>
-                          </div>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                            onClick={() => handleDownloadSTL(file, `${selectedCatalog.title}_${index + 1}.stl`)}
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download STL
-                          </Button>
-                        </div>
-                        
-                                                 {/* 3D Viewer */}
-                         <div className="relative">
-                           <div className="h-80 sm:h-96 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200">
-                             <STLViewer 
-                               url={file} 
-                               className="w-full h-full"
-                             />
-                           </div>
-                           
-                           {/* Viewer Controls Info */}
-                           <div className="mt-3 text-center">
-                             <p className="text-xs text-gray-500 px-2">
-                               💡 Touch to rotate • Pinch to zoom • Mobile-friendly controls
-                             </p>
-                           </div>
-                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-muted-foreground">Size</span>
-                  <p className="font-medium">{selectedCatalog.size}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Weight</span>
-                  <p className="font-medium">{selectedCatalog.weight}g</p>
-                </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Images</span>
-                  <p className="font-medium">{selectedCatalog.images.length}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">3D Models</span>
-                  <p className="font-medium">{selectedCatalog.files?.length || 0}</p>
-                </div>
-              </div>
-
-              {/* Order Now Button in Modal */}
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <Button
-                  variant="default"
-                  size="lg"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={() => handleOrderNow(selectedCatalog)}
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  Order Now
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            )}
     </div>
   );
 };

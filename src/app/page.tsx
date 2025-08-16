@@ -40,6 +40,12 @@ export default function LoginPage() {
         toast.info("Your account is not verified yet.");
         return;
       }
+      
+      // Store token in localStorage for API calls
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+      
       if (data.user.role === "admin") router.push("/admin");
       else if (data.user.role === "salesman") router.push("/salesman");
       else router.push("/");

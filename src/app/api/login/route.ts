@@ -45,9 +45,10 @@ export async function POST(req: NextRequest) {
     { expiresIn: "7d" }
   );
 
-  // Set token as HTTP-only cookie
+  // Set token as HTTP-only cookie and also return it for localStorage
   const response = NextResponse.json({
     message: "Login successful",
+    token: token, // Add token to response for localStorage
     user: { 
       role: user.role, 
       isApproved: user.isApproved,

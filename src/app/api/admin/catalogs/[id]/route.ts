@@ -41,13 +41,15 @@ export async function PUT(
     const catalogId = params.id;
     const formData = await req.formData();
     
-    const name = formData.get("name") as string;
+    const title = formData.get("title") as string;
+    const style = formData.get("style") as string;
     const size = formData.get("size") as string;
     const weight = parseFloat(formData.get("weight") as string);
+    const font = formData.get("font") as string;
     const description = formData.get("description") as string;
     
     // Validation
-    if (!name || !size || !weight || !description) {
+    if (!title || !style || !size || !weight || !font || !description) {
       return NextResponse.json(
         { error: "All fields are required" },
         { status: 400 }
@@ -107,9 +109,11 @@ export async function PUT(
     const updatedCatalog = await Catalog.findByIdAndUpdate(
       catalogId,
       {
-        name,
+        title,
+        style,
         size,
         weight,
+        font,
         description,
         images: finalImages,
         files: finalFiles,

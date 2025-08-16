@@ -25,36 +25,58 @@ export const uploadFile = async (file: File): Promise<string> => {
       throw new Error('File size exceeds 100MB limit');
     }
 
-    // Check if file is an image or STL
+    // Check if file is an image, STL, or audio
     const isImage = file.type.startsWith('image/');
     const isSTL = file.name.toLowerCase().endsWith('.stl') || 
                   file.type === 'application/octet-stream' || 
                   file.type === 'model/stl';
+    const isAudio = file.type.startsWith('audio/') || 
+                   file.name.toLowerCase().endsWith('.wav') ||
+                   file.name.toLowerCase().endsWith('.mp3') ||
+                   file.name.toLowerCase().endsWith('.m4a') ||
+                   file.name.toLowerCase().endsWith('.ogg') ||
+                   file.name.toLowerCase().endsWith('.webm');
     
-    if (!isImage && !isSTL) {
-      throw new Error('File must be an image or STL file');
+    if (!isImage && !isSTL && !isAudio) {
+      throw new Error('File must be an image, STL, or audio file');
     }
 
-    // For large files (especially STL), use direct upload instead of base64
-    if (file.size > 10 * 1024 * 1024) { // Files larger than 10MB
-      // Use direct upload method for large files
+    // Decide Cloudinary resource_type explicitly for better handling
+    const resourceType = isAudio ? 'video' : isSTL ? 'raw' : 'image';
+
+    // For audio files and large files, use streaming upload
+    if (isAudio || file.size > 10 * 1024 * 1024) {
+      // Use direct upload method for audio and large files
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       
       const result = await new Promise<CloudinaryResponse>((resolve, reject) => {
-        cloudinary.uploader.upload_stream({
+        const uploadStream = cloudinary.uploader.upload_stream({
           folder: 'pradaresidency',
-          resource_type: 'auto',
-          chunk_size: 6000000, // 6MB chunks for large files
+          resource_type: resourceType,
+          chunk_size: 10_000_000, // 10MB chunks
+          timeout: 180000, // 3 minute timeout
         }, (error, result) => {
           if (error) reject(error);
           else resolve(result as CloudinaryResponse);
-        }).end(buffer);
+        });
+
+        // Failsafe timeout
+        const timeout = setTimeout(() => {
+          try { uploadStream.destroy(); } catch {}
+          reject(new Error('Upload timeout'));
+        }, 240000); // 4 minute failsafe
+
+        uploadStream.on('finish', () => {
+          clearTimeout(timeout);
+        });
+
+        uploadStream.end(buffer);
       });
 
       return result.secure_url;
     } else {
-      // For smaller files, use base64 method
+      // For smaller image/raw files, use base64 method
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       const base64String = buffer.toString('base64');
@@ -63,7 +85,8 @@ export const uploadFile = async (file: File): Promise<string> => {
       const result = await new Promise<CloudinaryResponse>((resolve, reject) => {
         cloudinary.uploader.upload(dataURI, {
           folder: 'pradaresidency',
-          resource_type: 'auto',
+          resource_type: resourceType,
+          timeout: 60000, // 1 minute timeout for smaller files
         }, (error, result) => {
           if (error) reject(error);
           else resolve(result as CloudinaryResponse);

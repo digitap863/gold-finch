@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Mic, X, Upload, Plus, Square, Play, Trash2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 interface CatalogDetail {
   _id: string;
@@ -21,14 +22,18 @@ interface CatalogDetail {
 }
 
 export default function CreateOrderPage() {
-  const [, setImages] = useState<File[]>([]);
+  const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [productName, setProductName] = useState<string>("");
+  const [customerName, setCustomerName] = useState<string>("");
+  const [customizationDetails, setCustomizationDetails] = useState<string>("");
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState<string>("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -81,7 +86,7 @@ export default function CreateOrderPage() {
       };
       
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/wav' });
+        const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
         setAudioBlob(blob);
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
@@ -140,6 +145,75 @@ export default function CreateOrderPage() {
     setPreviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!productName.trim() || !customerName.trim()) {
+      toast.error("Product name and customer name are required");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append("productName", productName);
+      formData.append("customerName", customerName);
+      formData.append("customizationDetails", customizationDetails);
+      formData.append("expectedDeliveryDate", expectedDeliveryDate);
+      
+      if (catalogId) {
+        formData.append("catalogId", catalogId);
+      }
+
+      // Add voice recording if exists
+      if (audioBlob) {
+        const fileExtension = audioBlob.type.includes('webm') ? '.webm' : 
+                             audioBlob.type.includes('mp4') ? '.mp4' : 
+                             audioBlob.type.includes('ogg') ? '.ogg' : '.wav';
+        formData.append("voiceRecording", audioBlob, `recording${fileExtension}`);
+      }
+
+      // Add images
+      images.forEach((image) => {
+        formData.append("images", image);
+      });
+
+      const response = await fetch("/api/salesman/orders", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create order");
+      }
+
+      await response.json();
+      toast.success("Order created successfully!");
+      
+      // Reset form
+      setProductName("");
+      setCustomerName("");
+      setCustomizationDetails("");
+      setExpectedDeliveryDate("");
+      setImages([]);
+      setPreviews([]);
+      setAudioBlob(null);
+      setAudioUrl("");
+      setRecordingTime(0);
+      
+      // Redirect to orders page or show success message
+      window.location.href = "/salesman/track-orders";
+      
+    } catch (error) {
+      console.error("Error creating order:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to create order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -153,7 +227,7 @@ export default function CreateOrderPage() {
           <CardTitle className="text-lg md:text-xl">Order Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="product">Product Name</Label>
@@ -162,17 +236,19 @@ export default function CreateOrderPage() {
                   placeholder="e.g., Gold Ring"
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
+                  required
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customer">Customer Name</Label>
-                <Input id="customer" placeholder="Customer name" />
+                <Input 
+                  id="customer" 
+                  placeholder="Customer name" 
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  required
+                />
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="mobile">Customer Mobile</Label>
-              <Input id="mobile" placeholder="+1234567890" />
             </div>
             
             <div className="space-y-2">
@@ -181,6 +257,8 @@ export default function CreateOrderPage() {
                 id="details" 
                 placeholder="Describe any specific requirements, measurements, or customizations needed..."
                 className="min-h-[100px]"
+                value={customizationDetails}
+                onChange={(e) => setCustomizationDetails(e.target.value)}
               />
             </div>
             
@@ -314,12 +392,18 @@ export default function CreateOrderPage() {
             
             <div className="space-y-2">
               <Label htmlFor="deadline">Expected Delivery Date</Label>
-              <Input type="date" id="deadline" className="w-full" />
+              <Input 
+                type="date" 
+                id="deadline" 
+                className="w-full"
+                value={expectedDeliveryDate}
+                onChange={(e) => setExpectedDeliveryDate(e.target.value)}
+              />
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button type="submit" className="flex-1">
-                Submit Order
+              <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                {isSubmitting ? "Creating Order..." : "Submit Order"}
               </Button>
               <Button type="button" variant="outline" className="flex-1 sm:flex-none">
                 Save Draft
