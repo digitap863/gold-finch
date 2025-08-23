@@ -13,17 +13,23 @@ import { Eye, Edit, Trash2, Plus, Search, Download } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import STLViewer from '@/components/STLViewer';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Catalog {
   _id: string;
   title: string;
   style: string;
-  size: string;
-  weight: number;
-  description: string;
+  size?: string;
+  width?: number;
+  weight?: number;
+  description?: string;
   images: string[];
   files: string[];
-  font?: string;
+  font?: string; // legacy single font
+  fonts?: string[]; // new multiple fonts
+  category?: string;
+  material?: "Gold" | "Diamond";
+  audience?: "Men" | "Women" | "Kids";
   createdAt: string;
   updatedAt: string;
 }
@@ -34,6 +40,12 @@ interface Font {
   files: string[];
 }
 
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+}
+
 export default function AdminCatalogsPage() {
   const [selectedCatalog, setSelectedCatalog] = useState<Catalog | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -41,6 +53,12 @@ export default function AdminCatalogsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [fonts, setFonts] = useState<Font[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filters, setFilters] = useState({
+    material: "all",
+    audience: "all",
+    category: "all",
+  });
   const itemsPerPage = 10;
   const queryClient = useQueryClient();
 
@@ -56,6 +74,20 @@ export default function AdminCatalogsPage() {
       }
     };
     fetchFonts();
+  }, []);
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('/api/admin/categories');
+        const data = await res.json();
+        setCategories(data.categories || []);
+      } catch {
+        setCategories([]);
+      }
+    };
+    fetchCategories();
   }, []);
 
   // Dynamically inject @font-face for each font
@@ -104,13 +136,25 @@ export default function AdminCatalogsPage() {
     },
   });
 
-  // Filter catalogs based on search term
-  const filteredCatalogs = catalogs?.filter(catalog =>
-    catalog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    catalog.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    catalog.size.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    catalog.style.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Filter catalogs based on search term and filters
+  const filteredCatalogs = catalogs?.filter(catalog => {
+    const matchesSearch = 
+      catalog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      catalog.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      catalog.size?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      catalog.style.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesMaterial = filters.material === "all" || catalog.material === filters.material;
+    const matchesAudience = filters.audience === "all" || catalog.audience === filters.audience;
+    const matchesCategory = filters.category === "all" || catalog.category === filters.category;
+    
+    return matchesSearch && matchesMaterial && matchesAudience && matchesCategory;
+  }) || [];
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filters]);
 
   // Pagination
   const totalPages = Math.ceil(filteredCatalogs.length / itemsPerPage);
@@ -171,15 +215,96 @@ export default function AdminCatalogsPage() {
           <CardDescription>
             View, edit, and delete catalog items
           </CardDescription>
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search catalogs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
+          <div className="space-y-4">
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search catalogs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              
+              {/* Filter Dropdowns */}
+              <div className="flex flex-wrap gap-2">
+                <Select value={filters.material} onValueChange={(value) => setFilters(prev => ({ ...prev, material: value }))}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Material" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Materials</SelectItem>
+                    <SelectItem value="Gold">Gold</SelectItem>
+                    <SelectItem value="Diamond">Diamond</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={filters.audience} onValueChange={(value) => setFilters(prev => ({ ...prev, audience: value }))}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Audience" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Audiences</SelectItem>
+                    <SelectItem value="Men">Men</SelectItem>
+                    <SelectItem value="Women">Women</SelectItem>
+                    <SelectItem value="Kids">Kids</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category._id} value={category._id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFilters({ material: "all", audience: "all", category: "all" });
+                    setSearchTerm("");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </div>
+            
+            {/* Results Summary */}
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <div>
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredCatalogs.length)} of {filteredCatalogs.length} catalogs
+                {(searchTerm || filters.material !== "all" || filters.audience !== "all" || filters.category !== "all") && (
+                  <span className="ml-2">
+                    (filtered from {catalogs?.length || 0} total)
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span>Items per page:</span>
+                <Select value={itemsPerPage.toString()} onValueChange={() => {
+                  // Note: itemsPerPage is currently fixed, but this could be made dynamic
+                }}>
+                  <SelectTrigger className="w-[80px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -192,8 +317,12 @@ export default function AdminCatalogsPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Style</TableHead>
                     <TableHead>Size</TableHead>
+                    <TableHead>Width</TableHead>
                     <TableHead>Weight</TableHead>
-                    <TableHead>Font</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Material</TableHead>
+                    <TableHead>Audience</TableHead>
+                    <TableHead>Fonts</TableHead>
                     <TableHead>Images</TableHead>
                     <TableHead>Files</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -202,6 +331,8 @@ export default function AdminCatalogsPage() {
                 <TableBody>
                   {paginatedCatalogs.map((catalog) => {
                     const catalogFont = fonts.find(f => f._id === catalog.font);
+                    const catalogFonts = catalog.fonts ? catalog.fonts.map(fontId => fonts.find(f => f._id === fontId)).filter(Boolean) : [];
+                    const catalogCategory = categories.find(c => c._id === catalog.category);
                     return (
                     <TableRow key={catalog._id}>
                       <TableCell className="font-medium">{catalog.title}</TableCell>
@@ -210,10 +341,49 @@ export default function AdminCatalogsPage() {
                           {catalog.style}
                         </Badge>
                       </TableCell>
-                      <TableCell>{catalog.size}</TableCell>
-                      <TableCell>{formatWeight(catalog.weight)}</TableCell>
+                      <TableCell>{catalog.size || '-'}</TableCell>
+                      <TableCell>{catalog.width ? `${catalog.width}mm` : '-'}</TableCell>
+                      <TableCell>{formatWeight(catalog.weight || 0)}</TableCell>
                       <TableCell>
-                        {catalogFont ? (
+                        {catalogCategory ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-700">
+                            {catalogCategory.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {catalog.material ? (
+                          <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+                            {catalog.material}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {catalog.audience ? (
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                            {catalog.audience}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {catalogFonts.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {catalogFonts.slice(0, 2).map((font, index) => (
+                              <Badge key={index} variant="outline" style={{ fontFamily: font?.name }}>
+                                {font?.name}
+                              </Badge>
+                            ))}
+                            {catalogFonts.length > 2 && (
+                              <Badge variant="outline">+{catalogFonts.length - 2}</Badge>
+                            )}
+                          </div>
+                        ) : catalogFont ? (
                           <Badge variant="outline" style={{ fontFamily: catalogFont.name }}>
                             {catalogFont.name}
                           </Badge>
@@ -261,19 +431,53 @@ export default function AdminCatalogsPage() {
                                   <div className="space-y-2 text-sm">
                                     <div><span className="font-medium">Title:</span> {catalog.title}</div>
                                     <div><span className="font-medium">Style:</span> <Badge variant="secondary" className="bg-blue-100 text-blue-700 ml-2">{catalog.style}</Badge></div>
-                                    <div><span className="font-medium">Size:</span> {catalog.size}</div>
-                                    <div><span className="font-medium">Weight:</span> {formatWeight(catalog.weight)}</div>
-                                    <div><span className="font-medium">Font:</span> {(() => {
-                                      const catalogFont = fonts.find(f => f._id === catalog.font);
-                                      return catalogFont ? (
-                                        <Badge variant="outline" className="ml-2" style={{ fontFamily: catalogFont.name }}>
-                                          {catalogFont.name}
-                                        </Badge>
-                                      ) : (
-                                        <span className="text-muted-foreground ml-2">No font assigned</span>
-                                      );
+                                    <div><span className="font-medium">Size:</span> {catalog.size || 'Not specified'}</div>
+                                    <div><span className="font-medium">Width:</span> {catalog.width ? `${catalog.width}mm` : 'Not specified'}</div>
+                                    <div><span className="font-medium">Weight:</span> {formatWeight(catalog.weight || 0)}</div>
+                                    <div><span className="font-medium">Category:</span> {catalogCategory ? (
+                                      <Badge variant="outline" className="bg-green-50 text-green-700 ml-2">
+                                        {catalogCategory.name}
+                                      </Badge>
+                                    ) : (
+                                      <span className="text-muted-foreground ml-2">Not specified</span>
+                                    )}</div>
+                                    <div><span className="font-medium">Material:</span> {catalog.material ? (
+                                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700 ml-2">
+                                        {catalog.material}
+                                      </Badge>
+                                    ) : (
+                                      <span className="text-muted-foreground ml-2">Not specified</span>
+                                    )}</div>
+                                    <div><span className="font-medium">Audience:</span> {catalog.audience ? (
+                                      <Badge variant="outline" className="bg-purple-50 text-purple-700 ml-2">
+                                        {catalog.audience}
+                                      </Badge>
+                                    ) : (
+                                      <span className="text-muted-foreground ml-2">Not specified</span>
+                                    )}</div>
+                                    <div><span className="font-medium">Fonts:</span> {(() => {
+                                      const catalogFonts = catalog.fonts ? catalog.fonts.map(fontId => fonts.find(f => f._id === fontId)).filter(Boolean) : [];
+                                      if (catalogFonts.length > 0) {
+                                        return (
+                                          <div className="flex flex-wrap gap-1 ml-2">
+                                            {catalogFonts.map((font, index) => (
+                                              <Badge key={index} variant="outline" style={{ fontFamily: font?.name }}>
+                                                {font?.name}
+                                              </Badge>
+                                            ))}
+                                          </div>
+                                        );
+                                      } else if (catalogFont) {
+                                        return (
+                                          <Badge variant="outline" className="ml-2" style={{ fontFamily: catalogFont.name }}>
+                                            {catalogFont.name}
+                                          </Badge>
+                                        );
+                                      } else {
+                                        return <span className="text-muted-foreground ml-2">No font assigned</span>;
+                                      }
                                     })()}</div>
-                                    <div><span className="font-medium">Description:</span> {catalog.description}</div>
+                                    <div><span className="font-medium">Description:</span> {catalog.description || 'No description'}</div>
                                   </div>
                                 </div>
                                 
@@ -411,11 +615,19 @@ export default function AdminCatalogsPage() {
               
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center justify-between mt-6">
                   <div className="text-sm text-muted-foreground">
                     Showing {startIndex + 1} to {Math.min(endIndex, filteredCatalogs.length)} of {filteredCatalogs.length} catalogs
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                    >
+                      First
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -424,9 +636,35 @@ export default function AdminCatalogsPage() {
                     >
                       Previous
                     </Button>
-                    <span className="text-sm">
-                      Page {currentPage} of {totalPages}
-                    </span>
+                    
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
                     <Button
                       variant="outline"
                       size="sm"
@@ -434,6 +672,14 @@ export default function AdminCatalogsPage() {
                       disabled={currentPage === totalPages}
                     >
                       Next
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Last
                     </Button>
                   </div>
                 </div>

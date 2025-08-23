@@ -20,9 +20,9 @@ export const uploadFile = async (file: File): Promise<string> => {
       throw new Error('No file provided');
     }
 
-    // Check file size (max 100MB)
-    if (file.size > 100 * 1024 * 1024) {
-      throw new Error('File size exceeds 100MB limit');
+    // Check file size (max 10MB for Cloudinary free tier)
+    if (file.size > 50 * 1024 * 1024) {
+      throw new Error('File size exceeds 50MB limit. Please use a smaller file or upgrade your Cloudinary plan.');
     }
 
     // Check if file is an image, STL, or audio
@@ -44,9 +44,9 @@ export const uploadFile = async (file: File): Promise<string> => {
     // Decide Cloudinary resource_type explicitly for better handling
     const resourceType = isAudio ? 'video' : isSTL ? 'raw' : 'image';
 
-    // For audio files and large files, use streaming upload
-    if (isAudio || file.size > 10 * 1024 * 1024) {
-      // Use direct upload method for audio and large files
+    // For audio files, use streaming upload
+    if (isAudio) {
+      // Use direct upload method for audio files
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       
@@ -76,7 +76,7 @@ export const uploadFile = async (file: File): Promise<string> => {
 
       return result.secure_url;
     } else {
-      // For smaller image/raw files, use base64 method
+      // For image/raw files, use base64 method
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       const base64String = buffer.toString('base64');

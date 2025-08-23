@@ -10,18 +10,24 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Plus, Upload, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import Image from 'next/image';
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 // Catalog form schema
 const catalogFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   style: z.string().min(1, "Style is required"),
-  size: z.string().min(1, "Size is required"),
-  weight: z.string().min(1, "Weight is required"),
-  font: z.string().min(1, "Font is required"),
+  size: z.string().optional(),
+  width: z.string().optional(),
+  weight: z.string().optional(),
+  category: z.string().optional(),
+  material: z.enum(["Gold", "Diamond"]),
+  audience: z.enum(["Men", "Women", "Kids"]),
+  fonts: z.array(z.string()).optional(),
   description: z.string().optional(),
 });
 
@@ -33,11 +39,19 @@ interface Font {
   files?: string[]; // Added files property
 }
 
+interface CategoryOpt {
+  _id: string;
+  name: string;
+}
+
 const CatalogPage = () => {
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fonts, setFonts] = useState<Font[]>([]);
   const [fontsLoading, setFontsLoading] = useState(true);
+  const [categories, setCategories] = useState<CategoryOpt[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   useEffect(() => {
     const fetchFonts = async () => {
@@ -45,7 +59,9 @@ const CatalogPage = () => {
       try {
         const res = await fetch("/api/admin/fonts");
         const data = await res.json();
-        setFonts(data.fonts || []);
+        const fontsData = data.fonts || [];
+        console.log('Fetched fonts:', fontsData);
+        setFonts(fontsData);
       } catch {
         setFonts([]);
       } finally {
@@ -56,13 +72,44 @@ const CatalogPage = () => {
   }, []);
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      setCategoriesLoading(true);
+      try {
+        const res = await fetch("/api/admin/categories");
+        const data = await res.json();
+        setCategories(data.categories || []);
+      } catch {
+        setCategories([]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
     fonts.forEach((font) => {
-      if (!font.files?.length) return;
+      if (!font.files?.length) {
+        console.warn(`Font ${font.name} has no files`);
+        return;
+      }
+      
       const fontUrl = font.files[0];
-      const fontFace = new FontFace(font.name, `url(${fontUrl})`);
-      fontFace.load().then((loadedFace) => {
-        document.fonts.add(loadedFace);
-      });
+      console.log(`Loading font ${font.name} from ${fontUrl}`);
+      
+      // Only try to load fonts that have valid URLs
+      if (fontUrl && (fontUrl.startsWith('http') || fontUrl.startsWith('/uploads/'))) {
+        const fontFace = new FontFace(font.name, `url(${fontUrl})`);
+        fontFace.load().then((loadedFace) => {
+          document.fonts.add(loadedFace);
+          console.log(`Successfully loaded font ${font.name}`);
+        }).catch((error) => {
+          console.warn(`Failed to load font ${font.name} from ${fontUrl}:`, error);
+          // Don't throw error, just log it
+        });
+      } else {
+        console.warn(`Font ${font.name} has invalid URL: ${fontUrl}`);
+      }
     });
   }, [fonts]);
 
@@ -72,29 +119,45 @@ const CatalogPage = () => {
       title: "",
       style: "",
       size: "",
+      width: "",
       weight: "",
-      font: "",
+      category: "",
+      material: undefined,
+      audience: undefined,
+      fonts: [],
       description: "",
     },
   });
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedImages(prev => [...prev, ...files]);
+  };
 
-    const newFiles = Array.from(files);
-    setSelectedFiles(prev => [...prev, ...newFiles]);
-    toast.success("Images selected successfully");
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles(prev => [...prev, ...files]);
   };
 
   const removeImage = (index: number) => {
-    const newFiles = selectedFiles.filter((_, i) => i !== index);
-    setSelectedFiles(newFiles);
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeFont = (fontId: string, e: React.MouseEvent | React.KeyboardEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const current = new Set(form.getValues("fonts") || []);
+    current.delete(fontId);
+    form.setValue("fonts", Array.from(current));
   };
 
   const onSubmit = async (data: CatalogFormValues) => {
-    if (selectedFiles.length === 0) {
-      toast.error("Please select at least one image");
+    if (selectedImages.length === 0 && selectedFiles.length === 0) {
+      toast.error("Please select at least one image or file");
       return;
     }
 
@@ -103,13 +166,20 @@ const CatalogPage = () => {
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("style", data.style);
-      formData.append("size", data.size);
-      formData.append("weight", data.weight);
-      formData.append("font", data.font);
+      if (data.size) formData.append("size", data.size);
+      if (data.weight) formData.append("weight", data.weight);
+      if (data.width && data.width.length > 0) formData.append("width", data.width);
+      if (data.category) formData.append("category", data.category);
+      if (data.material) formData.append("material", data.material);
+      if (data.audience) formData.append("audience", data.audience);
+      if (data.fonts && data.fonts.length > 0) {
+        data.fonts.forEach((fid) => formData.append("fonts", fid));
+      }
       if (data.description) {
         formData.append("description", data.description);
       }
-      selectedFiles.forEach((file) => {
+      // Add all selected images and STL files to the same field; API separates by type
+      ;[...selectedImages, ...selectedFiles].forEach((file) => {
         formData.append("images", file);
       });
 
@@ -126,6 +196,7 @@ const CatalogPage = () => {
       await response.json();
       toast.success("Catalog created successfully!");
       form.reset();
+      setSelectedImages([]);
       setSelectedFiles([]);
     } catch (error) {
       console.error("Error creating catalog:", error);
@@ -142,7 +213,7 @@ const CatalogPage = () => {
         <p className="text-muted-foreground">Create a new catalog item with images and details</p>
       </div>
 
-      <Card className="max-w-2xl">
+      <Card className="max-w-3xl">
         <CardHeader>
           <CardTitle>Catalog Information</CardTitle>
           <CardDescription>
@@ -180,13 +251,13 @@ const CatalogPage = () => {
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="size"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Size *</FormLabel>
+                      <FormLabel>Size</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., Small, Medium, Large" {...field} />
                       </FormControl>
@@ -200,7 +271,7 @@ const CatalogPage = () => {
                   name="weight"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Weight (grams) *</FormLabel>
+                      <FormLabel>Weight (grams)</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -213,40 +284,163 @@ const CatalogPage = () => {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="width"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Width (mm)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="Optional" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField
                 control={form.control}
-                name="font"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Font *</FormLabel>
-                    <FormControl>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={fontsLoading}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder={fontsLoading ? "Loading fonts..." : "Select a font"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {fonts.map((font) => (
-                            <SelectItem
-                              key={font._id}
-                              value={font._id}
-                              style={{ fontFamily: font.name }}
-                            >
-                              {font.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                name="fonts"
+                render={() => {
+                  const selected = form.watch("fonts") || [];
+                  const selectedFonts = fonts.filter((f) => selected.includes(f._id));
+                  const maxBadges = 3;
+                  const extraCount = Math.max(0, selectedFonts.length - maxBadges);
+                  return (
+                    <FormItem>
+                      <FormLabel>Fonts</FormLabel>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button type="button" variant="outline" className="w-full justify-start min-h-10">
+                            {fontsLoading ? (
+                              <span className="text-sm text-muted-foreground">Loading fonts...</span>
+                            ) : selectedFonts.length === 0 ? (
+                              <span className="text-sm text-muted-foreground">Select fonts</span>
+                            ) : (
+                              <div className="flex flex-wrap gap-1">
+                                {selectedFonts.slice(0, maxBadges).map((f) => (
+                                  <Badge key={f._id} variant="secondary" className="flex items-center gap-1">
+                                    <span style={{ fontFamily: f.name }}>{f.name}</span>
+                                    <span
+                                      role="button"
+                                      tabIndex={0}
+                                      aria-label={`Remove ${f.name}`}
+                                      className="ml-1 text-xs opacity-70 hover:opacity-100 cursor-pointer"
+                                      onClick={(e) => removeFont(f._id, e)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                          e.preventDefault();
+                                          removeFont(f._id, e);
+                                        }
+                                      }}
+                                    >
+                                      ×
+                                    </span>
+                                  </Badge>
+                                ))}
+                                {extraCount > 0 && (
+                                  <Badge variant="outline">+{extraCount} more</Badge>
+                                )}
+                              </div>
+                            )}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56">
+                          {fonts.map((f) => {
+                            const isChecked = (form.getValues("fonts") || []).includes(f._id);
+                            return (
+                              <DropdownMenuCheckboxItem
+                                key={f._id}
+                                checked={!!isChecked}
+                                onCheckedChange={(v) => {
+                                  const current = new Set(form.getValues("fonts") || []);
+                                  if (v) current.add(f._id); else current.delete(f._id);
+                                  form.setValue("fonts", Array.from(current));
+                                }}
+                              >
+                                <span style={{ fontFamily: f.name }}>{f.name}</span>
+                              </DropdownMenuCheckboxItem>
+                            );
+                          })}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange} disabled={categoriesLoading}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select category (optional)"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((c) => (
+                              <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="material"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Material *</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select material" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Gold">Gold</SelectItem>
+                            <SelectItem value="Diamond">Diamond</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="audience"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Audience *</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select audience" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Men">Men</SelectItem>
+                            <SelectItem value="Women">Women</SelectItem>
+                            <SelectItem value="Kids">Kids</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
@@ -269,57 +463,30 @@ const CatalogPage = () => {
                 )}
               />
 
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Image Upload */}
                 <div>
-                  <Label className="text-sm font-medium">Files *</Label>
-                  <div className="flex items-center gap-4 mt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('image-upload')?.click()}
-                      className="flex items-center gap-2"
-                    >
-                      <Upload className="h-4 w-4" />
-                      Select Images
-                    </Button>
-                    <input
-                      id="image-upload"
+                  <Label className="text-sm font-medium">Images</Label>
+                  <div className="mt-2">
+                    <Input
                       type="file"
+                      accept="image/*"
                       multiple
-                      accept="image/*,.stl,application/octet-stream"
-                      onChange={handleImageUpload}
-                      className="hidden"
+                      onChange={handleImageChange}
+                      className="cursor-pointer"
                     />
                   </div>
-                  <FormDescription>
-                    Upload one or more images or STL files for the catalog item
-                  </FormDescription>
-                </div>
-                
-                {selectedFiles.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {selectedFiles.map((file, index) => {
-                      const isImage = file.type.startsWith('image/');
-                      
-                      return (
+                  {selectedImages.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {selectedImages.map((file, index) => (
                         <div key={index} className="relative group">
-                          {isImage ? (
-                            <Image
-                              src={URL.createObjectURL(file)}
-                              alt={`Catalog image ${index + 1}`}
-                              width={200}
-                              height={128}
-                              className="w-full h-32 object-cover rounded-lg border"
-                            />
-                          ) : (
-                            <div className="w-full h-32 bg-gray-100 rounded-lg border flex items-center justify-center">
-                              <div className="text-center">
-                                <div className="text-2xl mb-1">📁</div>
-                                <div className="text-xs text-gray-600">{file.name}</div>
-                                <div className="text-xs text-gray-500">STL File</div>
-                              </div>
-                            </div>
-                          )}
+                          <Image
+                            src={URL.createObjectURL(file)}
+                            alt={`Catalog image ${index + 1}`}
+                            width={200}
+                            height={128}
+                            className="w-full h-32 object-cover rounded-lg border"
+                          />
                           <Button
                             type="button"
                             variant="destructive"
@@ -330,10 +497,41 @@ const CatalogPage = () => {
                             <X className="h-3 w-3" />
                           </Button>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* File Upload (STL etc.) */}
+                <div>
+                  <Label className="text-sm font-medium">Files (STL, etc.)</Label>
+                  <div className="mt-2">
+                    <Input
+                      type="file"
+                      accept=".stl,.obj,.fbx,.3ds,application/octet-stream"
+                      multiple
+                      onChange={handleFileChange}
+                      className="cursor-pointer"
+                    />
                   </div>
-                )}
+                  {selectedFiles.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {selectedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 border rounded">
+                          <span className="text-sm">{file.name}</span>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeFile(index)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-4 pt-4">
@@ -346,6 +544,7 @@ const CatalogPage = () => {
                   variant="outline"
                   onClick={() => {
                     form.reset();
+                    setSelectedImages([]);
                     setSelectedFiles([]);
                   }}
                 >

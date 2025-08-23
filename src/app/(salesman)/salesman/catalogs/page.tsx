@@ -16,12 +16,17 @@ interface Catalog {
   _id: string;
   title: string;
   style: string;
-  size: string;
-  weight: number;
+  size?: string;
+  width?: number;
+  weight?: number;
   description?: string;
   images: string[];
   files?: string[];
-  font?: string;
+  font?: string; // legacy single font
+  fonts?: string[]; // new multiple fonts
+  category?: string;
+  material?: "Gold" | "Diamond";
+  audience?: "Men" | "Women" | "Kids";
   createdAt: string;
 }
 
@@ -31,17 +36,28 @@ interface Font {
   files: string[];
 }
 
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+}
+
 const CatalogsPage = () => {
   const router = useRouter();
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sizeFilter, setSizeFilter] = useState('all');
+  const [materialFilter, setMaterialFilter] = useState('all');
+  const [audienceFilter, setAudienceFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [fonts, setFonts] = useState<Font[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     fetchCatalogs();
     fetchFonts();
+    fetchCategories();
   }, []);
 
   const fetchCatalogs = async () => {
@@ -71,6 +87,20 @@ const CatalogsPage = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/admin/categories');
+      if (!res.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+      const data = await res.json();
+      setCategories(data.categories || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast.error('Failed to load categories');
+    }
+  };
+
   // Dynamically inject @font-face for each font
   useEffect(() => {
     fonts.forEach((font) => {
@@ -86,8 +116,11 @@ const CatalogsPage = () => {
   const filteredCatalogs = catalogs.filter(catalog => {
     const matchesSearch = catalog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          catalog.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSize = sizeFilter === 'all' || catalog.size.toLowerCase() === sizeFilter.toLowerCase();
-    return matchesSearch && matchesSize;
+    const matchesSize = sizeFilter === 'all' || catalog.size?.toLowerCase() === sizeFilter.toLowerCase();
+    const matchesMaterial = materialFilter === 'all' || catalog.material === materialFilter;
+    const matchesAudience = audienceFilter === 'all' || catalog.audience === audienceFilter;
+    const matchesCategory = categoryFilter === 'all' || catalog.category === categoryFilter;
+    return matchesSearch && matchesSize && matchesMaterial && matchesAudience && matchesCategory;
   });
 
   const handleViewCatalog = (catalog: Catalog) => {
@@ -144,6 +177,40 @@ const CatalogsPage = () => {
             <SelectItem value="large">Large</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={materialFilter} onValueChange={setMaterialFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Filter by material" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Materials</SelectItem>
+            <SelectItem value="Gold">Gold</SelectItem>
+            <SelectItem value="Diamond">Diamond</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={audienceFilter} onValueChange={setAudienceFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Filter by audience" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Audiences</SelectItem>
+            <SelectItem value="Men">Men</SelectItem>
+            <SelectItem value="Women">Women</SelectItem>
+            <SelectItem value="Kids">Kids</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {categories.map(category => (
+              <SelectItem key={category._id} value={category._id}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Catalog Grid */}
@@ -152,13 +219,12 @@ const CatalogsPage = () => {
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">No catalogs found</h3>
           <p className="text-muted-foreground">
-            {searchTerm || sizeFilter !== 'all' ? 'Try adjusting your search or filters' : 'No catalogs available yet'}
+            {searchTerm || sizeFilter !== 'all' || materialFilter !== 'all' || audienceFilter !== 'all' || categoryFilter !== 'all' ? 'Try adjusting your search or filters' : 'No catalogs available yet'}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredCatalogs.map((catalog) => {
-            const catalogFont = fonts.find(f => f._id === catalog.font);
             return (
               <Card key={catalog._id} className="overflow-hidden hover:shadow-lg transition-all duration-200 border border-gray-200">
                 <CardHeader className="pb-3">
@@ -171,9 +237,18 @@ const CatalogsPage = () => {
                         {catalog.description || 'No description available'}
                       </CardDescription>
                     </div>
-                    <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700">
-                      {catalog.size}
-                    </Badge>
+                    <div className="flex flex-col gap-1 ml-2">
+                      {catalog.size && (
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                          {catalog.size}
+                        </Badge>
+                      )}
+                      {catalog.material && (
+                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                          {catalog.material}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
               
@@ -201,16 +276,10 @@ const CatalogsPage = () => {
                       <span className="text-gray-500">Style:</span>
                       <span className="font-medium text-gray-900">{catalog.style}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Weight:</span>
-                      <span className="font-medium text-gray-900">{catalog.weight}g</span>
-                    </div>
-                    {catalogFont && (
+                    {catalog.audience && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Font:</span>
-                        <span className="font-medium text-gray-900" style={{ fontFamily: catalogFont.name }}>
-                          {catalogFont.name}
-                        </span>
+                        <span className="text-gray-500">Audience:</span>
+                        <span className="font-medium text-gray-900">{catalog.audience}</span>
                       </div>
                     )}
                   </div>

@@ -19,6 +19,7 @@ import {
   IconSettings,
   IconShoppingCart,
   IconPoint,
+  IconList,
 
 } from "@tabler/icons-react"
 
@@ -52,6 +53,11 @@ const data = {
       title: "Requests",
       url: "/admin/requests",
       icon: IconListDetails,
+    },
+    {
+      title: "Category",
+      url: "/admin/category",
+      icon: IconList,
     },
     {
       title: "Add Catalogs",
