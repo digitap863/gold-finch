@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
 // Define styles for the PDF
 const styles = StyleSheet.create({
@@ -91,6 +91,52 @@ const styles = StyleSheet.create({
     color: '#666666',
     textAlign: 'center',
   },
+  table: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#000000',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000000',
+    minHeight: 25,
+    alignItems: 'center',
+  },
+  tableHeader: {
+    backgroundColor: '#F3F4F6',
+    fontWeight: 'bold',
+  },
+  tableCell: {
+    flex: 1,
+    padding: 5,
+    borderRightWidth: 1,
+    borderRightColor: '#000000',
+    fontSize: 10,
+    textAlign: 'center',
+  },
+  tableCellLast: {
+    flex: 1,
+    padding: 5,
+    fontSize: 10,
+    textAlign: 'center',
+  },
+  tableCellSpan: {
+    flex: 2,
+    padding: 5,
+    borderRightWidth: 1,
+    borderRightColor: '#000000',
+    fontSize: 10,
+    textAlign: 'center',
+  },
+  tableCellNarrow: {
+    flex: 0.5,
+    padding: 5,
+    borderRightWidth: 1,
+    borderRightColor: '#000000',
+    fontSize: 10,
+    textAlign: 'center',
+  },
 });
 
 interface OrderDetail {
@@ -106,6 +152,21 @@ interface OrderDetail {
   createdAt: string;
   updatedAt: string;
   expectedDeliveryDate?: string;
+  
+  // New fields
+  karatage?: string;
+  weight?: number;
+  colour?: string;
+  name?: string;
+  size?: {
+    type: 'plastic' | 'metal';
+    value: string;
+  };
+  stone?: boolean;
+  enamel?: boolean;
+  matte?: boolean;
+  rodium?: boolean;
+  
   catalogId?: {
     _id: string;
     title: string;
@@ -184,22 +245,41 @@ const OrderPDF: React.FC<OrderPDFProps> = ({ order }) => {
           
           <View style={styles.row}>
             <Text style={styles.label}>Order Date:</Text>
-            <Text style={styles.value}>{formatDate(order.createdAt)}</Text>
+            <Text style={styles.value}>
+              {new Date(order.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short", 
+                day: "numeric"
+              })}
+            </Text>
           </View>
           
           {order.expectedDeliveryDate && (
             <View style={styles.row}>
-              <Text style={styles.label}>Expected Delivery:</Text>
-              <Text style={styles.value}>{formatDate(order.expectedDeliveryDate)}</Text>
+              <Text style={styles.label}>DUE DATE:</Text>
+              <Text style={styles.value}>
+                {new Date(order.expectedDeliveryDate).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric"
+                })}
+              </Text>
             </View>
           )}
           
           <View style={styles.row}>
             <Text style={styles.label}>Salesman:</Text>
             <Text style={styles.value}>
-              {order.salesmanId?.name || order.salesmanId?.email || order.salesmanId?.mobile || '-'}
+              {order.salesmanId?.name || order.salesmanId?.email || '-'}
             </Text>
           </View>
+
+          {order.salesmanId?.mobile && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Salesman Mobile:</Text>
+              <Text style={styles.value}>{order.salesmanId.mobile}</Text>
+            </View>
+          )}
 
           {order.salesmanId?.shopName && (
             <View style={styles.row}>
@@ -223,6 +303,62 @@ const OrderPDF: React.FC<OrderPDFProps> = ({ order }) => {
           )}
         </View>
 
+        {/* Product Specifications */}
+        {(order.karatage || order.weight || order.colour || order.name || order.size || order.stone || order.enamel || order.matte || order.rodium) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Product Specifications</Text>
+            
+            {order.karatage && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Karatage:</Text>
+                <Text style={styles.value}>{order.karatage}</Text>
+              </View>
+            )}
+            
+            {order.weight && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Weight:</Text>
+                <Text style={styles.value}>{order.weight}g</Text>
+              </View>
+            )}
+            
+            {order.colour && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Colour:</Text>
+                <Text style={styles.value}>{order.colour}</Text>
+              </View>
+            )}
+            
+            {order.name && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Name:</Text>
+                <Text style={styles.value}>{order.name}</Text>
+              </View>
+            )}
+            
+            {order.size && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Size:</Text>
+                <Text style={styles.value}>{order.size.type} - {order.size.value}</Text>
+              </View>
+            )}
+            
+            {(order.stone || order.enamel || order.matte || order.rodium) && (
+              <View style={styles.row}>
+                <Text style={styles.label}>Features:</Text>
+                <Text style={styles.value}>
+                  {[
+                    order.stone && 'Stone',
+                    order.enamel && 'Enamel',
+                    order.matte && 'Matte',
+                    order.rodium && 'Rodium'
+                  ].filter(Boolean).join(', ')}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Customization Details */}
         {order.customizationDetails && (
           <View style={styles.section}>
@@ -232,7 +368,7 @@ const OrderPDF: React.FC<OrderPDFProps> = ({ order }) => {
         )}
 
         {/* Media Information */}
-        {(order.voiceRecording || (order.images && order.images.length > 0)) && (
+        {/* {(order.voiceRecording || (order.images && order.images.length > 0)) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Media Files</Text>
             
@@ -250,7 +386,7 @@ const OrderPDF: React.FC<OrderPDFProps> = ({ order }) => {
               </View>
             )}
           </View>
-        )}
+        )} */}
 
         {/* Catalog Details */}
         {order.catalogId && (
@@ -306,6 +442,97 @@ const OrderPDF: React.FC<OrderPDFProps> = ({ order }) => {
             )}
           </View>
         )}
+
+        {/* Production Tracking Table */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Production Tracking</Text>
+          
+          <View style={styles.table}>
+            {/* Header Row 1: blank | Worker Name (spans 2 cols) | blank */}
+            <View style={[styles.tableRow, styles.tableHeader]}>
+              <Text style={styles.tableCellNarrow}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}>WORKER NAME</Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            
+            {/* Header Row 2: blank | Issue | Receipt | blank */}
+            <View style={[styles.tableRow, styles.tableHeader]}>
+              <Text style={styles.tableCellNarrow}></Text>
+              <Text style={styles.tableCell}>ISSUE</Text>
+              <Text style={styles.tableCell}>RECEIPT</Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            
+            {/* Data Rows (9 rows) */}
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}>FILING</Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}>VACUUM</Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}>FILING</Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}>BUFFING</Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}>FILING</Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}>BUFFING</Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}>SETTING</Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}>SETTING</Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellNarrow}>DETAILS</Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCell}></Text>
+              <Text style={styles.tableCellLast}></Text>
+            </View>
+          </View>
+        </View>
 
         {/* Footer */}
         <View style={styles.footer}>

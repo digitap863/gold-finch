@@ -34,6 +34,19 @@ export default function CreateOrderPage() {
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // New fields
+  const [karatage, setKaratage] = useState<string>("");
+  const [weight, setWeight] = useState<string>("");
+  const [colour, setColour] = useState<string>("");
+  const [name, setName] = useState<string>("");
+  const [sizeType, setSizeType] = useState<string>("");
+  const [sizeValue, setSizeValue] = useState<string>("");
+  const [stone, setStone] = useState<boolean>(false);
+  const [enamel, setEnamel] = useState<boolean>(false);
+  const [matte, setMatte] = useState<boolean>(false);
+  const [rodium, setRodium] = useState<boolean>(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -162,6 +175,18 @@ export default function CreateOrderPage() {
       formData.append("customizationDetails", customizationDetails);
       formData.append("expectedDeliveryDate", expectedDeliveryDate);
       
+      // New fields
+      formData.append("karatage", karatage);
+      formData.append("weight", weight);
+      formData.append("colour", colour);
+      formData.append("name", name);
+      formData.append("sizeType", sizeType);
+      formData.append("sizeValue", sizeValue);
+      formData.append("stone", stone.toString());
+      formData.append("enamel", enamel.toString());
+      formData.append("matte", matte.toString());
+      formData.append("rodium", rodium.toString());
+      
       if (catalogId) {
         formData.append("catalogId", catalogId);
       }
@@ -202,6 +227,18 @@ export default function CreateOrderPage() {
       setAudioBlob(null);
       setAudioUrl("");
       setRecordingTime(0);
+      
+      // Reset new fields
+      setKaratage("");
+      setWeight("");
+      setColour("");
+      setName("");
+      setSizeType("");
+      setSizeValue("");
+      setStone(false);
+      setEnamel(false);
+      setMatte(false);
+      setRodium(false);
       
       // Redirect to orders page or show success message
       window.location.href = "/salesman/track-orders";
@@ -399,6 +436,122 @@ export default function CreateOrderPage() {
                 value={expectedDeliveryDate}
                 onChange={(e) => setExpectedDeliveryDate(e.target.value)}
               />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="karatage">Karatage</Label>
+                <Input 
+                  id="karatage" 
+                  placeholder="e.g., 18K" 
+                  value={karatage}
+                  onChange={(e) => setKaratage(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="weight">Weight</Label>
+                <Input 
+                  id="weight" 
+                  placeholder="e.g., 5.00g" 
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="colour">Colour</Label>
+                <Input 
+                  id="colour" 
+                  placeholder="e.g., Yellow" 
+                  value={colour}
+                  onChange={(e) => setColour(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input 
+                  id="name" 
+                  placeholder="e.g., Ring Name" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+                             <div className="space-y-2">
+                 <Label>Size</Label>
+                 <div className="flex gap-4">
+                   <label className="flex items-center space-x-2">
+                     <input
+                       type="radio"
+                       name="sizeType"
+                       value="plastic"
+                       checked={sizeType === "plastic"}
+                       onChange={(e) => setSizeType(e.target.value)}
+                     />
+                     <span>Plastic</span>
+                   </label>
+                   <label className="flex items-center space-x-2">
+                     <input
+                       type="radio"
+                       name="sizeType"
+                       value="metal"
+                       checked={sizeType === "metal"}
+                       onChange={(e) => setSizeType(e.target.value)}
+                     />
+                     <span>Metal</span>
+                   </label>
+                 </div>
+                 {sizeType && (
+                   <Input 
+                     placeholder="Enter size value" 
+                     value={sizeValue}
+                     onChange={(e) => setSizeValue(e.target.value)}
+                   />
+                 )}
+               </div>
+                             <div className="col-span-2 space-y-3">
+                 <Label>Additional Features</Label>
+                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                   <label className="flex items-center space-x-2 cursor-pointer">
+                     <input 
+                       type="checkbox" 
+                       id="stone" 
+                       checked={stone}
+                       onChange={(e) => setStone(e.target.checked)}
+                       className="rounded"
+                     />
+                     <span className="text-sm">Stone</span>
+                   </label>
+                   <label className="flex items-center space-x-2 cursor-pointer">
+                     <input 
+                       type="checkbox" 
+                       id="enamel" 
+                       checked={enamel}
+                       onChange={(e) => setEnamel(e.target.checked)}
+                       className="rounded"
+                     />
+                     <span className="text-sm">Enamel</span>
+                   </label>
+                   <label className="flex items-center space-x-2 cursor-pointer">
+                     <input 
+                       type="checkbox" 
+                       id="matte" 
+                       checked={matte}
+                       onChange={(e) => setMatte(e.target.checked)}
+                       className="rounded"
+                     />
+                     <span className="text-sm">Matte</span>
+                   </label>
+                   <label className="flex items-center space-x-2 cursor-pointer">
+                     <input 
+                       type="checkbox" 
+                       id="rodium" 
+                       checked={rodium}
+                       onChange={(e) => setRodium(e.target.checked)}
+                       className="rounded"
+                     />
+                     <span className="text-sm">Rodium</span>
+                   </label>
+                 </div>
+               </div>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3 pt-4">

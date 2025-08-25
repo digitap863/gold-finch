@@ -9,6 +9,21 @@ const orderSchema = new mongoose.Schema({
   images: { type: [String], required: false }, // Array of image URLs
   expectedDeliveryDate: { type: Date, required: false },
   catalogId: { type: mongoose.Schema.Types.ObjectId, ref: "Catalog", required: false },
+  
+  // New fields
+  karatage: { type: String, required: false },
+  weight: { type: Number, required: false },
+  colour: { type: String, required: false },
+  name: { type: String, required: false },
+  size: {
+    type: { type: String, enum: ['plastic', 'metal'], required: false },
+    value: { type: String, required: false }
+  },
+  stone: { type: Boolean, default: false },
+  enamel: { type: Boolean, default: false },
+  matte: { type: Boolean, default: false },
+  rodium: { type: Boolean, default: false },
+  
   status: { 
     type: String, 
     enum: ['confirmed', 'order_view_and_accepted', 'cad_completed', 'production_floor', 'finished', 'dispatched', 'cancelled'],

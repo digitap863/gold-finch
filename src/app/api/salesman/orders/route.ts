@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
 import Order from "@/models/order";
 import Counter from "@/models/Counter";
-import Catalog from "@/models/catalog";
-import User from "@/models/user";
 import { uploadFile } from "@/helpers/fileUpload";
 import jwt from "jsonwebtoken";
 
@@ -23,7 +21,7 @@ const verifyToken = (req: NextRequest) => {
     };
     
     return decoded;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -51,6 +49,18 @@ export async function POST(req: NextRequest) {
     const expectedDeliveryDate = formData.get("expectedDeliveryDate") as string;
     const catalogId = formData.get("catalogId") as string;
     const priority = formData.get("priority") as string || "medium";
+    
+    // New fields
+    const karatage = formData.get("karatage") as string;
+    const weight = formData.get("weight") ? parseFloat(formData.get("weight") as string) : undefined;
+    const colour = formData.get("colour") as string;
+    const name = formData.get("name") as string;
+    const sizeType = formData.get("sizeType") as string;
+    const sizeValue = formData.get("sizeValue") as string;
+    const stone = formData.get("stone") === "true";
+    const enamel = formData.get("enamel") === "true";
+    const matte = formData.get("matte") === "true";
+    const rodium = formData.get("rodium") === "true";
 
     // Validation
     if (!productName || !customerName) {
@@ -68,8 +78,9 @@ export async function POST(req: NextRequest) {
         voiceRecordingUrl = await uploadFile(voiceRecordingFile);
       } catch (error) {
         console.error("Error uploading voice recording:", error);
+        const errorMessage = error instanceof Error ? error.message : "Failed to upload voice recording";
         return NextResponse.json(
-          { error: "Failed to upload voice recording" },
+          { error: `Voice recording upload failed: ${errorMessage}` },
           { status: 500 }
         );
       }
@@ -86,8 +97,9 @@ export async function POST(req: NextRequest) {
           imageUrls.push(imageUrl);
         } catch (error) {
           console.error("Error uploading image:", error);
+          const errorMessage = error instanceof Error ? error.message : "Failed to upload image";
           return NextResponse.json(
-            { error: "Failed to upload image" },
+            { error: `Image upload failed (${file.name}): ${errorMessage}` },
             { status: 500 }
           );
         }
@@ -115,7 +127,17 @@ export async function POST(req: NextRequest) {
       expectedDeliveryDate: expectedDeliveryDate ? new Date(expectedDeliveryDate) : undefined,
       catalogId: catalogId || undefined,
       salesmanId: user.userId,
-      priority
+      priority,
+      // New fields
+      karatage: karatage || undefined,
+      weight: weight || undefined,
+      colour: colour || undefined,
+      name: name || undefined,
+      size: sizeType ? { type: sizeType, value: sizeValue || undefined } : undefined,
+      stone,
+      enamel,
+      matte,
+      rodium
     });
 
     await order.save();

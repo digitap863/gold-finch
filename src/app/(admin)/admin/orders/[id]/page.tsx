@@ -25,6 +25,21 @@ interface OrderDetail {
   createdAt: string;
   updatedAt: string;
   expectedDeliveryDate?: string;
+  
+  // New fields
+  karatage?: string;
+  weight?: number;
+  colour?: string;
+  name?: string;
+  size?: {
+    type: 'plastic' | 'metal';
+    value: string;
+  };
+  stone?: boolean;
+  enamel?: boolean;
+  matte?: boolean;
+  rodium?: boolean;
+  
   catalogId?: {
     _id: string;
     title: string;
@@ -235,8 +250,14 @@ const OrderDetailPage = () => {
 
                 <div>
                   <label className="text-sm font-medium text-gray-500">Salesman</label>
-                  <p>{order.salesmanId?.name || order.salesmanId?.email || order.salesmanId?.mobile || '-'}</p>
+                  <p>{order.salesmanId?.name || order.salesmanId?.email || '-'}</p>
                 </div>
+                {order.salesmanId?.mobile && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Salesman Mobile</label>
+                    <p>{order.salesmanId.mobile}</p>
+                  </div>
+                )}
                 {order.salesmanId?.shopName && (
                   <div>
                     <label className="text-sm font-medium text-gray-500">Shop Name</label>
@@ -302,6 +323,84 @@ const OrderDetailPage = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Product Specifications */}
+          {(order.karatage || order.weight || order.colour || order.name || order.size || order.stone || order.enamel || order.matte || order.rodium) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Specifications</CardTitle>
+                <CardDescription>Detailed product specifications and features</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {order.karatage && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Karatage</label>
+                      <p className="text-lg font-medium">{order.karatage}</p>
+                    </div>
+                  )}
+                  {order.weight && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Weight</label>
+                      <p className="text-lg font-medium">{order.weight}g</p>
+                    </div>
+                  )}
+                  {order.colour && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Colour</label>
+                      <p className="text-lg font-medium">{order.colour}</p>
+                    </div>
+                  )}
+                  {order.name && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Name</label>
+                      <p className="text-lg font-medium">{order.name}</p>
+                    </div>
+                  )}
+                  {order.size && (
+                    <div className="md:col-span-2">
+                      <label className="text-sm font-medium text-gray-500">Size</label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="capitalize">
+                          {order.size.type}
+                        </Badge>
+                        <span className="text-lg font-medium">{order.size.value}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Features */}
+                {(order.stone || order.enamel || order.matte || order.rodium) && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 block mb-2">Additional Features</label>
+                    <div className="flex flex-wrap gap-2">
+                      {order.stone && (
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                          Stone
+                        </Badge>
+                      )}
+                      {order.enamel && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700">
+                          Enamel
+                        </Badge>
+                      )}
+                      {order.matte && (
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                          Matte
+                        </Badge>
+                      )}
+                      {order.rodium && (
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                          Rodium
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Catalog Details */}
           {order.catalogId && (

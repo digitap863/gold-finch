@@ -21,8 +21,8 @@ export const uploadFile = async (file: File): Promise<string> => {
     }
 
     // Check file size (max 10MB for Cloudinary free tier)
-    if (file.size > 50 * 1024 * 1024) {
-      throw new Error('File size exceeds 50MB limit. Please use a smaller file or upgrade your Cloudinary plan.');
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error('File size exceeds 10MB limit. Please use a smaller file or upgrade your Cloudinary plan.');
     }
 
     // Check if file is an image, STL, or audio
@@ -54,21 +54,34 @@ export const uploadFile = async (file: File): Promise<string> => {
         const uploadStream = cloudinary.uploader.upload_stream({
           folder: 'pradaresidency',
           resource_type: resourceType,
-          chunk_size: 10_000_000, // 10MB chunks
-          timeout: 180000, // 3 minute timeout
+          chunk_size: 6_000_000, // 6MB chunks for better reliability
+          timeout: 120000, // 2 minute timeout
         }, (error, result) => {
-          if (error) reject(error);
-          else resolve(result as CloudinaryResponse);
+          if (error) {
+            console.error('Cloudinary upload error:', error);
+            if (error.message?.includes('timeout') || error.http_code === 499) {
+              reject(new Error('Upload timed out. Please try again with a smaller file or check your internet connection.'));
+            } else {
+              reject(new Error(`Upload failed: ${error.message || 'Unknown error'}`));
+            }
+          } else {
+            resolve(result as CloudinaryResponse);
+          }
         });
 
         // Failsafe timeout
         const timeout = setTimeout(() => {
           try { uploadStream.destroy(); } catch {}
-          reject(new Error('Upload timeout'));
-        }, 240000); // 4 minute failsafe
+          reject(new Error('Upload timeout. Please try again with a smaller file.'));
+        }, 180000); // 3 minute failsafe
 
         uploadStream.on('finish', () => {
           clearTimeout(timeout);
+        });
+
+        uploadStream.on('error', (error) => {
+          clearTimeout(timeout);
+          reject(new Error(`Upload stream error: ${error.message}`));
         });
 
         uploadStream.end(buffer);
@@ -88,8 +101,16 @@ export const uploadFile = async (file: File): Promise<string> => {
           resource_type: resourceType,
           timeout: 60000, // 1 minute timeout for smaller files
         }, (error, result) => {
-          if (error) reject(error);
-          else resolve(result as CloudinaryResponse);
+          if (error) {
+            console.error('Cloudinary upload error:', error);
+            if (error.message?.includes('timeout') || error.http_code === 499) {
+              reject(new Error('Upload timed out. Please try again with a smaller file or check your internet connection.'));
+            } else {
+              reject(new Error(`Upload failed: ${error.message || 'Unknown error'}`));
+            }
+          } else {
+            resolve(result as CloudinaryResponse);
+          }
         });
       });
 
@@ -97,6 +118,18 @@ export const uploadFile = async (file: File): Promise<string> => {
     }
   } catch (error) {
     console.error('Error uploading file:', error);
-    throw error instanceof Error ? error : new Error('Failed to upload file');
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        throw new Error('Upload timed out. Please try again with a smaller file or check your internet connection.');
+      } else if (error.message.includes('size')) {
+        throw new Error('File is too large. Please use a file smaller than 10MB.');
+      } else {
+        throw error;
+      }
+    } else {
+      throw new Error('Failed to upload file. Please try again.');
+    }
   }
 }; 

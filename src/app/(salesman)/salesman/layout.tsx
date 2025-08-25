@@ -6,7 +6,8 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Home, PlusCircle, List, Bell, User, LogOut, Package, Menu } from "lucide-react";
+  import { Home, PlusCircle, List, Bell, User, LogOut, Package, Menu } from "lucide-react";
+import { IconPointOff } from "@tabler/icons-react";
 import { usePathname } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -17,6 +18,7 @@ const sidebarLinks = [
   { href: "/salesman/notifications", label: "Notifications", icon: <Bell size={18} /> },
   { href: "/salesman/profile", label: "Profile", icon: <User size={18} /> },
   { href: "/salesman/catalogs", label: "Catalogs", icon: <Package size={18} /> },
+  { href: "/salesman/special-items", label: "Special Items", icon: <IconPointOff size={18} /> },
 ];
 
 export default function SalesmanLayout({ children }: { children: React.ReactNode }) {
