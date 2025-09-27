@@ -44,6 +44,9 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           cd /home/ubuntu/client
+          export PATH=$PATH:/usr/bin:/usr/local/bin
+          which npm || echo "npm not found"
+          which pm2 || echo "pm2 not found"
           npm ci --only=production || npm install --production
           pm2 restart next-app || pm2 start npm --name "next-app" -- start
 
