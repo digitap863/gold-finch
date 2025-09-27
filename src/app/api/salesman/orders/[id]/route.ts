@@ -28,7 +28,7 @@ const verifyToken = (req: NextRequest) => {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connect();
@@ -44,7 +44,7 @@ export async function GET(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
     
-    const orderId = params.id;
+    const { id: orderId } = await params;
     
     const order = await Order.findOne({ 
       _id: orderId, 
@@ -70,7 +70,7 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connect();
@@ -86,7 +86,7 @@ export async function PUT(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
     
-    const orderId = params.id;
+    const { id: orderId } = await params;
     const body = await req.json();
     
     // Only allow updating certain fields
@@ -133,7 +133,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connect();
@@ -149,7 +149,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
     
-    const orderId = params.id;
+    const { id: orderId } = await params;
     
     const order = await Order.findOneAndDelete({ 
       _id: orderId, 

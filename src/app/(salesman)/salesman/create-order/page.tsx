@@ -1,5 +1,5 @@
 "use client"
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ interface CatalogDetail {
   files?: string[];
 }
 
-export default function CreateOrderPage() {
+function CreateOrderContent() {
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [productName, setProductName] = useState<string>("");
@@ -566,5 +566,13 @@ export default function CreateOrderPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function CreateOrderPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CreateOrderContent />
+    </Suspense>
   );
 } 

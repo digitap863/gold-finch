@@ -11,9 +11,7 @@ const catalogSchema = new mongoose.Schema({
   files: { type: [String], required: false }, // For STL and other 3D files
   size: { type: String, required: false },
   weight: { type: Number, required: false },
-  // Keep legacy single font for backward compatibility
   font: { type: mongoose.Schema.Types.ObjectId, ref: "Font", required: false },
-  // New: multiple fonts selection support
   fonts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Font" }],
   description: { type: String, required: false },
 }, {

@@ -4,13 +4,13 @@ import User from "@/models/user";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connect();
 
     const { status } = await req.json();
-    const { id } = params;
+    const { id } = await params;
 
     if (!["approved", "rejected"].includes(status)) {
       return NextResponse.json(

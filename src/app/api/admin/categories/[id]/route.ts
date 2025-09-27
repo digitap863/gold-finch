@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
 import Catagory from "@/models/catagory";
 
+function extractId(context: unknown, req: NextRequest): string | null {
+  if (context && typeof context === "object" && "params" in context) {
+    const params = (context as { params?: Record<string, string> }).params;
+    const id = params?.id;
+    if (typeof id === "string") return id;
+  }
+  const parts = req.nextUrl.pathname.split("/");
+  return parts[parts.length - 1] || null;
+}
+
 function toSlug(input: string) {
   return input
     .toLowerCase()
@@ -11,10 +21,11 @@ function toSlug(input: string) {
     .replace(/-+/g, "-");
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, context: unknown) {
   try {
     await connect();
-    const category = await Catagory.findById(params.id);
+    const id = extractId(context, _req);
+    const category = await Catagory.findById(id);
     if (!category) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
@@ -25,7 +36,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, context: unknown) {
   try {
     await connect();
     const body = await request.json();
@@ -38,16 +49,17 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     // Always generate slug from name for consistency
     const slug = toSlug(name);
 
+    const id = extractId(context, request);
     const existing = await Catagory.findOne({
       $or: [{ name }, { slug }],
-      _id: { $ne: params.id },
+      _id: { $ne: id },
     });
     if (existing) {
       return NextResponse.json({ error: "Category with same name or slug exists" }, { status: 409 });
     }
 
     const category = await Catagory.findByIdAndUpdate(
-      params.id,
+      id,
       { name, slug },
       { new: true }
     );
@@ -61,10 +73,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, context: unknown) {
   try {
     await connect();
-    const category = await Catagory.findByIdAndDelete(params.id);
+    const id = extractId(context, _request);
+    const category = await Catagory.findByIdAndDelete(id);
     if (!category) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }

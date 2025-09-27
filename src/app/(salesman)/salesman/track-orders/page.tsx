@@ -19,6 +19,15 @@ interface Order {
   voiceRecording?: string;
   images?: string[];
   expectedDeliveryDate?: string;
+  karatage?: string;
+  weight?: number;
+  colour?: string;
+  name?: string;
+  size?: { type?: 'plastic' | 'metal'; value?: string };
+  stone?: boolean;
+  enamel?: boolean;
+  matte?: boolean;
+  rodium?: boolean;
   status: 'order_view_and_accepted' | 'cad_completed' | 'production_floor' | 'finished' | 'dispatched' | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   createdAt: string;
@@ -291,6 +300,52 @@ const TrackOrdersPage = () => {
                   <div className="font-mono text-xs bg-muted px-2 py-1 rounded">{selectedOrder.orderCode}</div>
                 </div>
               </div>
+
+              {(selectedOrder.karatage || selectedOrder.weight !== undefined || selectedOrder.colour || selectedOrder.name || selectedOrder.size || selectedOrder.stone || selectedOrder.enamel || selectedOrder.matte || selectedOrder.rodium) && (
+                <div className="pt-2 border-t">
+                  <div className="text-sm font-medium mb-2">Product Specifications</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    {selectedOrder.karatage && (
+                      <div>
+                        <div className="text-gray-500">Karatage</div>
+                        <div className="font-medium">{selectedOrder.karatage}</div>
+                      </div>
+                    )}
+                    {selectedOrder.weight !== undefined && (
+                      <div>
+                        <div className="text-gray-500">Weight</div>
+                        <div className="font-medium">{selectedOrder.weight} g</div>
+                      </div>
+                    )}
+                    {selectedOrder.colour && (
+                      <div>
+                        <div className="text-gray-500">Colour</div>
+                        <div className="font-medium">{selectedOrder.colour}</div>
+                      </div>
+                    )}
+                    {selectedOrder.name && (
+                      <div>
+                        <div className="text-gray-500">Name</div>
+                        <div className="font-medium">{selectedOrder.name}</div>
+                      </div>
+                    )}
+                    {selectedOrder.size && (selectedOrder.size.type || selectedOrder.size.value) && (
+                      <div className="sm:col-span-2">
+                        <div className="text-gray-500">Size</div>
+                        <div className="font-medium">{selectedOrder.size.type ? selectedOrder.size.type.toUpperCase() : ''}{selectedOrder.size.type && selectedOrder.size.value ? ' - ' : ''}{selectedOrder.size.value ?? ''}</div>
+                      </div>
+                    )}
+                  </div>
+                  {(selectedOrder.stone || selectedOrder.enamel || selectedOrder.matte || selectedOrder.rodium) && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selectedOrder.stone && (<Badge variant="secondary">Stone</Badge>)}
+                      {selectedOrder.enamel && (<Badge variant="secondary">Enamel</Badge>)}
+                      {selectedOrder.matte && (<Badge variant="secondary">Matte</Badge>)}
+                      {selectedOrder.rodium && (<Badge variant="secondary">Rodium</Badge>)}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="py-10 text-center text-muted-foreground">No order selected</div>

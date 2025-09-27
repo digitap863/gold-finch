@@ -4,13 +4,13 @@ import User from "@/models/user";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connect();
 
     const { isBlocked } = await req.json();
-    const userId = params.id;
+    const { id: userId } = await params;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -40,12 +40,13 @@ export async function PATCH(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connect();
 
-    const user = await User.findById(params.id);
+    const { id } = await params;
+    const user = await User.findById(id);
 
     if (!user) {
       return NextResponse.json(

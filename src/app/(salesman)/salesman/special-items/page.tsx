@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+
 
 interface SpecialItem {
   _id: string;

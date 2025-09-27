@@ -503,7 +503,7 @@ const CatalogPage = () => {
                 </div>
 
                 {/* File Upload (STL etc.) */}
-                <div>
+                {/* <div>
                   <Label className="text-sm font-medium">Files (STL, etc.)</Label>
                   <div className="mt-2">
                     <Input
@@ -531,7 +531,7 @@ const CatalogPage = () => {
                       ))}
                     </div>
                   )}
-                </div>
+                </div> */}
               </div>
 
               <div className="flex gap-4 pt-4">

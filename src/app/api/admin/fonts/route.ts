@@ -113,7 +113,7 @@ export async function DELETE(request: NextRequest) {
     if (font.files && Array.isArray(font.files)) {
       for (const filePath of font.files) {
         try {
-          const absPath = join(process.cwd(), "public", ...filePath.split("/uploads/")[1].split("/").filter(Boolean).reduce((acc, cur) => { acc.push(cur); return acc; }, ["uploads"]));
+          const absPath = join(process.cwd(), "public", ...filePath.split("/uploads/")[1].split("/").filter(Boolean).reduce((acc: string[], cur: string) => { acc.push(cur); return acc; }, ["uploads"]));
           if (existsSync(absPath)) {
             require("fs").unlinkSync(absPath);
           }

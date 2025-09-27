@@ -3,7 +3,7 @@ import { connect } from "@/db.Config/db.Config";
 import SpecialItem from "@/models/special_item";
 import { uploadFile } from "@/helpers/fileUpload";
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connect();
     const form = await req.formData();
@@ -24,7 +24,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       update.image = await uploadFile(imageFile);
     }
 
-    const item = await SpecialItem.findByIdAndUpdate(params.id, update, { new: true });
+    const { id } = await params;
+    const item = await SpecialItem.findByIdAndUpdate(id, update, { new: true });
     if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json({ item });
   } catch (error) {
@@ -32,10 +33,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connect();
-    await SpecialItem.findByIdAndDelete(params.id);
+    const { id } = await params;
+    await SpecialItem.findByIdAndDelete(id);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json({ error: "Failed to delete item" }, { status: 500 });

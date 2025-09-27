@@ -3,14 +3,24 @@ import { connect } from "@/db.Config/db.Config";
 import Catalog from "@/models/catalog";
 import { uploadFile } from "@/helpers/fileUpload";
 
+function extractId(context: unknown, req: NextRequest): string | null {
+  if (context && typeof context === "object" && "params" in context) {
+    const params = (context as { params?: Record<string, string> }).params;
+    const id = params?.id;
+    if (typeof id === "string") return id;
+  }
+  const parts = req.nextUrl.pathname.split("/");
+  return parts[parts.length - 1] || null;
+}
+
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: unknown
 ) {
   try {
     await connect();
     
-    const catalogId = params.id;
+    const catalogId = extractId(context, req);
     
     const catalog = await Catalog.findById(catalogId);
     
@@ -33,12 +43,12 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: unknown
 ) {
   try {
     await connect();
     
-    const catalogId = params.id;
+    const catalogId = extractId(context, req);
     const formData = await req.formData();
     
     const title = formData.get("title") as string;
@@ -133,12 +143,12 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: unknown
 ) {
   try {
     await connect();
     
-    const catalogId = params.id;
+    const catalogId = extractId(context, req);
     
     // Find and delete the catalog
     const deletedCatalog = await Catalog.findByIdAndDelete(catalogId);

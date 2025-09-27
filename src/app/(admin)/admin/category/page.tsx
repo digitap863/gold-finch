@@ -134,10 +134,10 @@ const CategoryPage = () => {
                   )}
                 />
 
-                <div>
+                {/* <div>
                   <FormLabel>Slug</FormLabel>
                   <p className="text-xs text-muted-foreground">Preview: {autoSlug || "-"}</p>
-                </div>
+                </div> */}
 
                 <div className="flex gap-3">
                   <Button type="submit" disabled={submitting}>
@@ -162,7 +162,7 @@ const CategoryPage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Slug</TableHead>
+           
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -170,7 +170,7 @@ const CategoryPage = () => {
                 {categories.map((c) => (
                   <TableRow key={c._id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell>{c.slug}</TableCell>
+   
                     <TableCell className="text-right">
                       <Button variant="destructive" size="sm" onClick={() => handleDelete(c._id)}>
                         Delete

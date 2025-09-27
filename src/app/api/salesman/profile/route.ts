@@ -28,10 +28,10 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     profile: {
-      name: user.name,
-      email: user.email,
-      mobile: user.mobile,
-      isApproved: user.isApproved,
+      name: (user as any).name,
+      email: (user as any).email,
+      mobile: (user as any).mobile,
+      isApproved: (user as any).isApproved,
     }
   });
 }

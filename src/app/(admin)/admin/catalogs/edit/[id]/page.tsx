@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,8 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, X, Loader2 } from "lucide-react";
+import { ArrowLeft, X, Loader2 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const catalogFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -47,7 +48,9 @@ interface Font {
   files: string[];
 }
 
-export default function EditCatalogPage({ params }: { params: { id: string } }) {
+export default function EditCatalogPage() {
+  const params = useParams();
+  const id = (params as Record<string, string>).id;
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -86,9 +89,9 @@ export default function EditCatalogPage({ params }: { params: { id: string } }) 
 
   // Fetch catalog data
   const { data: catalog, isLoading, error } = useQuery({
-    queryKey: ["catalog", params.id],
+    queryKey: ["catalog", id],
     queryFn: async (): Promise<Catalog> => {
-      const res = await fetch(`/api/admin/catalogs/${params.id}`);
+      const res = await fetch(`/api/admin/catalogs/${id}`);
       if (!res.ok) {
         throw new Error("Failed to fetch catalog");
       }
@@ -174,7 +177,7 @@ export default function EditCatalogPage({ params }: { params: { id: string } }) 
         formData.append("removedFiles", file);
       });
 
-      const response = await fetch(`/api/admin/catalogs/${params.id}`, {
+      const response = await fetch(`/api/admin/catalogs/${id}`, {
         method: "PUT",
         body: formData,
       });
@@ -366,11 +369,13 @@ export default function EditCatalogPage({ params }: { params: { id: string } }) 
                     <label className="text-sm font-medium">Existing Images</label>
                     <div className="mt-4 grid grid-cols-2 gap-4">
                       {existingImages.map((image, index) => (
-                        <div key={index} className="relative">
-                          <img
+                        <div key={index} className="relative h-32">
+                          <Image
                             src={image}
                             alt={`Existing image ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg"
+                            fill
+                            className="object-cover rounded-lg"
+                            unoptimized
                           />
                           <Button
                             type="button"
@@ -404,11 +409,13 @@ export default function EditCatalogPage({ params }: { params: { id: string } }) 
                   {selectedImages.length > 0 && (
                     <div className="mt-4 grid grid-cols-2 gap-4">
                       {selectedImages.map((file, index) => (
-                        <div key={index} className="relative">
-                          <img
+                        <div key={index} className="relative h-32">
+                          <Image
                             src={URL.createObjectURL(file)}
                             alt={`Preview ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg"
+                            fill
+                            className="object-cover rounded-lg"
+                            unoptimized
                           />
                           <Button
                             type="button"
