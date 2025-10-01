@@ -46,7 +46,6 @@ interface CategoryOpt {
 
 const CatalogPage = () => {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fonts, setFonts] = useState<Font[]>([]);
   const [fontsLoading, setFontsLoading] = useState(true);
@@ -134,17 +133,8 @@ const CatalogPage = () => {
     setSelectedImages(prev => [...prev, ...files]);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
-  };
-
   const removeImage = (index: number) => {
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const removeFont = (fontId: string, e: React.MouseEvent | React.KeyboardEvent) => {
@@ -156,8 +146,8 @@ const CatalogPage = () => {
   };
 
   const onSubmit = async (data: CatalogFormValues) => {
-    if (selectedImages.length === 0 && selectedFiles.length === 0) {
-      toast.error("Please select at least one image or file");
+    if (selectedImages.length === 0) {
+      toast.error("Please select at least one image");
       return;
     }
 
@@ -178,8 +168,8 @@ const CatalogPage = () => {
       if (data.description) {
         formData.append("description", data.description);
       }
-      // Add all selected images and STL files to the same field; API separates by type
-      ;[...selectedImages, ...selectedFiles].forEach((file) => {
+      // Add all selected images
+      selectedImages.forEach((file) => {
         formData.append("images", file);
       });
 
@@ -197,7 +187,6 @@ const CatalogPage = () => {
       toast.success("Catalog created successfully!");
       form.reset();
       setSelectedImages([]);
-      setSelectedFiles([]);
     } catch (error) {
       console.error("Error creating catalog:", error);
       toast.error(error instanceof Error ? error.message : "Failed to create catalog");
@@ -502,36 +491,6 @@ const CatalogPage = () => {
                   )}
                 </div>
 
-                {/* File Upload (STL etc.) */}
-                {/* <div>
-                  <Label className="text-sm font-medium">Files (STL, etc.)</Label>
-                  <div className="mt-2">
-                    <Input
-                      type="file"
-                      accept=".stl,.obj,.fbx,.3ds,application/octet-stream"
-                      multiple
-                      onChange={handleFileChange}
-                      className="cursor-pointer"
-                    />
-                  </div>
-                  {selectedFiles.length > 0 && (
-                    <div className="mt-4 space-y-2">
-                      {selectedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 border rounded">
-                          <span className="text-sm">{file.name}</span>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeFile(index)}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div> */}
               </div>
 
               <div className="flex gap-4 pt-4">
@@ -545,7 +504,6 @@ const CatalogPage = () => {
                   onClick={() => {
                     form.reset();
                     setSelectedImages([]);
-                    setSelectedFiles([]);
                   }}
                 >
                   Reset Form

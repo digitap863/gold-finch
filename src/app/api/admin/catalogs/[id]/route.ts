@@ -3,9 +3,9 @@ import { connect } from "@/db.Config/db.Config";
 import Catalog from "@/models/catalog";
 import { uploadFile } from "@/helpers/fileUpload";
 
-function extractId(context: unknown, req: NextRequest): string | null {
+async function extractId(context: unknown, req: NextRequest): Promise<string | null> {
   if (context && typeof context === "object" && "params" in context) {
-    const params = (context as { params?: Record<string, string> }).params;
+    const params = await (context as { params?: Promise<Record<string, string>> }).params;
     const id = params?.id;
     if (typeof id === "string") return id;
   }
@@ -20,7 +20,7 @@ export async function GET(
   try {
     await connect();
     
-    const catalogId = extractId(context, req);
+    const catalogId = await extractId(context, req);
     
     const catalog = await Catalog.findById(catalogId);
     
@@ -48,7 +48,7 @@ export async function PUT(
   try {
     await connect();
     
-    const catalogId = extractId(context, req);
+    const catalogId = await extractId(context, req);
     const formData = await req.formData();
     
     const title = formData.get("title") as string;
@@ -148,7 +148,7 @@ export async function DELETE(
   try {
     await connect();
     
-    const catalogId = extractId(context, req);
+    const catalogId = await extractId(context, req);
     
     // Find and delete the catalog
     const deletedCatalog = await Catalog.findByIdAndDelete(catalogId);

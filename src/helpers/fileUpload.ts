@@ -10,7 +10,7 @@ interface S3UploadResult {
 const s3Region = process.env.AWS_REGION as string;
 const s3Bucket = process.env.AWS_S3_BUCKET as string;
 const s3PublicBaseUrl = process.env.AWS_S3_PUBLIC_BASE_URL || '';
-const s3PublicRead = (process.env.AWS_S3_PUBLIC_READ || 'true').toLowerCase() === 'true';
+
 
 if (!s3Region || !s3Bucket) {
   // Do not throw on import; throw lazily on first use to avoid build-time issues
@@ -60,7 +60,7 @@ export const uploadFile = async (file: File): Promise<string> => {
     const sanitizedName = (file.name || 'file')
       .replace(/\s+/g, '_')
       .replace(/[^A-Za-z0-9._-]/g, '');
-    const key = `pradaresidency/${typeFolder}/${Date.now()}_${sanitizedName}`;
+    const key = `goldfinch/${typeFolder}/${Date.now()}_${sanitizedName}`;
 
     // Ensure env is configured
     if (!s3Region || !s3Bucket) {
@@ -75,7 +75,8 @@ export const uploadFile = async (file: File): Promise<string> => {
         Key: key,
         Body: body,
         ContentType: file.type || 'application/octet-stream',
-        ...(s3PublicRead ? { ACL: 'public-read' as const } : {}),
+        // Note: ACL removed as modern S3 buckets often have ACLs disabled
+        // Make bucket public through bucket policy instead
       },
       queueSize: 4,
       partSize: 5 * 1024 * 1024, // 5MB

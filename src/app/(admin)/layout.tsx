@@ -46,8 +46,9 @@ const adminLayout = async ({ children }: { children: React.ReactNode }) => {
           </SidebarProvider>
         </ActiveThemeProvider>
       </ThemeProvider>
-    </div>
+    </div>   
   );
 };
 
 export default adminLayout;
+ 

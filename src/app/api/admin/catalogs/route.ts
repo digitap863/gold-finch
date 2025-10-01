@@ -32,24 +32,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Separate images and STL files
-    const imageFiles: File[] = [];
-    const stlFiles: File[] = [];
-
-    for (const file of files) {
-      const isImage = file.type.startsWith('image/');
-      const isSTL = file.name.toLowerCase().endsWith('.stl');
-      
-      if (isImage) {
-        imageFiles.push(file);
-      } else if (isSTL) {
-        stlFiles.push(file);
-      }
-    }
-
-    // Upload images to Cloudinary
+    // Upload images to S3
     const imageUrls: string[] = [];
-    for (const image of imageFiles) {
+    for (const image of files) {
       try {
         const imageUrl = await uploadFile(image);
         imageUrls.push(imageUrl);
@@ -58,22 +43,6 @@ export async function POST(req: NextRequest) {
         const errorMessage = error instanceof Error ? error.message : "Failed to upload image";
         return NextResponse.json(
           { error: `Failed to upload image "${image.name}": ${errorMessage}` },
-          { status: 500 }
-        );
-      }
-    }
-
-    // Upload STL files to Cloudinary
-    const stlUrls: string[] = [];
-    for (const stlFile of stlFiles) {
-      try {
-        const stlUrl = await uploadFile(stlFile);
-        stlUrls.push(stlUrl);
-      } catch (error) {
-        console.error("Error uploading STL file:", error);
-        const errorMessage = error instanceof Error ? error.message : "Failed to upload STL file";
-        return NextResponse.json(
-          { error: `Failed to upload STL file "${stlFile.name}": ${errorMessage}` },
           { status: 500 }
         );
       }
@@ -93,7 +62,6 @@ export async function POST(req: NextRequest) {
       audience,
       description: description || "",
       images: imageUrls,
-      files: stlUrls, // Store STL file URLs separately
     });
 
     await catalog.save();

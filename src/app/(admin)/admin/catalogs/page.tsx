@@ -201,7 +201,7 @@ export default function AdminCatalogsPage() {
             Manage your product catalog
           </p>
         </div>
-        <Link href="/admin/catalogs/add">
+        <Link href="/admin/add-catalogs">
           <Button>
             <Plus className="w-4 h-4 mr-2" />
             Add Catalog
