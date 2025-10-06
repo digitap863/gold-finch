@@ -4,7 +4,7 @@
 // This page displays order status notifications exclusively for salesmen
 // Admins do not use this notification system
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Bell, CheckCircle, XCircle, Clock, AlertTriangle, Info, Check, Search, Filter } from "lucide-react";
+import { Bell, CheckCircle, XCircle, AlertTriangle, Info, Check, Search } from "lucide-react";
 
 interface NotificationItem {
   _id: string;
@@ -28,6 +28,12 @@ interface NotificationItem {
     status: string;
   } | null;
   orderCode?: string;
+  metadata?: {
+    oldStatus?: string;
+    newStatus?: string;
+    customerName?: string;
+    cancelReason?: string;
+  };
 }
 
 function getIcon(type: string) {
@@ -51,17 +57,13 @@ export default function SalesmanNotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filterType, setFilterType] = useState("all");
-  const [filterRead, setFilterRead] = useState("all");
+  const [filterRead, setFilterRead] = useState("false"); // Default to show unread first
   const [searchTerm, setSearchTerm] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [filterType, filterRead, searchTerm, page]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -92,7 +94,16 @@ export default function SalesmanNotificationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterType, filterRead, page]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
 
   const markAsRead = async (notificationIds: string[]) => {
     try {
@@ -188,12 +199,20 @@ export default function SalesmanNotificationsPage() {
     }
   };
 
-  const filteredNotifications = notifications.filter(n =>
-    searchTerm === "" || 
-    n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    n.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    n.orderCode?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredNotifications = notifications
+    .filter(n =>
+      searchTerm === "" || 
+      n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      n.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      n.orderCode?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      // Sort by read status first (unread first), then by creation date (newest first)
+      if (a.isRead !== b.isRead) {
+        return a.isRead ? 1 : -1; // Unread notifications come first
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
   return (
     <div className="space-y-6">
@@ -202,7 +221,10 @@ export default function SalesmanNotificationsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Notifications</h1>
-            <p className="text-muted-foreground">Stay updated with your order status</p>
+            <p className="text-muted-foreground">
+              Stay updated with your order status
+              {filterRead === "false" && " • Showing unread first"}
+            </p>
           </div>
           {unreadCount > 0 && (
             <Badge className="bg-red-100 text-red-800">
@@ -246,8 +268,8 @@ export default function SalesmanNotificationsPage() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="false">Unread</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="true">Read</SelectItem>
               </SelectContent>
             </Select>
@@ -335,6 +357,12 @@ export default function SalesmanNotificationsPage() {
                           {n.orderId && (
                             <div className="mt-2 text-xs text-muted-foreground">
                               Order: {n.orderId.orderCode} • {n.orderId.customerName} • Status: {n.orderId.status.replace('_', ' ')}
+                            </div>
+                          )}
+                          {n.metadata?.cancelReason && (
+                            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs">
+                              <div className="font-medium text-red-800 mb-1">Cancellation Reason:</div>
+                              <div className="text-red-700">{n.metadata.cancelReason}</div>
                             </div>
                           )}
                         </div>

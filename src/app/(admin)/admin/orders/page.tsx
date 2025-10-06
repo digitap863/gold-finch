@@ -8,6 +8,9 @@ import { Eye, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface AdminOrderItem {
   _id: string;
@@ -17,12 +20,13 @@ interface AdminOrderItem {
   customizationDetails?: string;
   voiceRecording?: string;
   images?: string[];
-    status: 'confirmed' | 'order_view_and_accepted' | 'cad_completed' | 'production_floor' | 'finished' | 'dispatched';
+    status: 'confirmed' | 'order_view_and_accepted' | 'cad_completed' | 'production_floor' | 'finished' | 'dispatched' | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   createdAt: string;
   expectedDeliveryDate?: string;
   catalogId?: { _id: string; title: string } | null;
   salesmanId?: { _id: string; name?: string; email?: string; mobile?: string } | null;
+  cancelReason?: string;
 }
 
 const AdminOrdersPage = () => {
@@ -33,6 +37,9 @@ const AdminOrdersPage = () => {
   const [dateTo, setDateTo] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -70,6 +77,15 @@ const AdminOrdersPage = () => {
   const bulkUpdateStatus = async (status: AdminOrderItem['status']) => {
     try {
       if (selectedIds.length === 0) return;
+      
+      // If cancelling, show modal for cancel reason
+      if (status === 'cancelled') {
+        setOrderToCancel('bulk'); // Special identifier for bulk cancellation
+        setCancelReason("");
+        setCancelModalOpen(true);
+        return;
+      }
+      
       const res = await fetch('/api/admin/orders/bulk-update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -88,20 +104,73 @@ const AdminOrdersPage = () => {
     window.location.href = `/admin/orders/${orderId}`;
   };
 
-  const updateOrderField = async (orderId: string, payload: Partial<Pick<AdminOrderItem, 'status' | 'priority' | 'expectedDeliveryDate'>>) => {
+  const updateOrderField = async (orderId: string, payload: Partial<Pick<AdminOrderItem, 'status' | 'priority' | 'expectedDeliveryDate' | 'cancelReason'>>) => {
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('Failed to update order');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update order');
+      }
       const { order } = await res.json();
       setOrders(prev => prev.map(o => (o._id === order._id ? order : o)));
       toast.success('Order updated');
-    } catch {
-      console.error('Update error');
-      toast.error('Failed to update order');
+    } catch (error) {
+      console.error('Update error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update order');
+    }
+  };
+
+  const handleCancelOrder = (orderId: string) => {
+    setOrderToCancel(orderId);
+    setCancelReason("");
+    setCancelModalOpen(true);
+  };
+
+  const confirmCancelOrder = async () => {
+    if (!cancelReason.trim()) {
+      toast.error("Please provide a reason for cancellation");
+      return;
+    }
+
+    if (!orderToCancel) return;
+
+    try {
+      if (orderToCancel === 'bulk') {
+        // Handle bulk cancellation
+        const res = await fetch('/api/admin/orders/bulk-update', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            ids: selectedIds, 
+            status: 'cancelled',
+            cancelReason: cancelReason.trim()
+          }),
+        });
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Failed to update orders');
+        }
+        setOrders(prev => prev.map(o => selectedIds.includes(o._id) ? { ...o, status: 'cancelled', cancelReason: cancelReason.trim() } : o));
+        setSelectedIds([]);
+        toast.success('Orders cancelled successfully');
+      } else {
+        // Handle single order cancellation
+        await updateOrderField(orderToCancel, { 
+          status: 'cancelled', 
+          cancelReason: cancelReason.trim() 
+        });
+      }
+      
+      setCancelModalOpen(false);
+      setCancelReason("");
+      setOrderToCancel(null);
+    } catch (error) {
+      console.error('Cancel error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to cancel order(s)');
     }
   };
 
@@ -251,12 +320,19 @@ const AdminOrdersPage = () => {
                 <TableCell>
                   <Select
                     value={o.status}
-                    onValueChange={(value) => updateOrderField(o._id, { status: value as AdminOrderItem['status'] })}
+                    onValueChange={(value) => {
+                      if (value === 'cancelled') {
+                        handleCancelOrder(o._id);
+                      } else {
+                        updateOrderField(o._id, { status: value as AdminOrderItem['status'] });
+                      }
+                    }}
                   >
                     <SelectTrigger className="w-[220px]">
                       <SelectValue />
                     </SelectTrigger>
               <SelectContent>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
                 <SelectItem value="order_view_and_accepted">Order View & Accepted</SelectItem>
                 <SelectItem value="cad_completed">CAD Completed</SelectItem>
                 <SelectItem value="production_floor">Production Floor</SelectItem>
@@ -304,6 +380,51 @@ const AdminOrdersPage = () => {
           )}
         </TableBody>
       </Table>
+
+      {/* Cancel Order Modal */}
+      <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {orderToCancel === 'bulk' ? `Cancel ${selectedIds.length} Orders` : 'Cancel Order'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="cancel-reason">
+                Reason for cancellation <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="cancel-reason"
+                placeholder="Please provide a reason for cancelling this order..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="min-h-[100px]"
+                required
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCancelModalOpen(false);
+                setCancelReason("");
+                setOrderToCancel(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmCancelOrder}
+              disabled={!cancelReason.trim()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Confirm Cancellation
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

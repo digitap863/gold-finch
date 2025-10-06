@@ -36,7 +36,8 @@ export async function createOrderStatusNotification(
   salesmanId: string,
   oldStatus: string,
   newStatus: string,
-  customerName?: string
+  customerName?: string,
+  cancelReason?: string
 ) {
   const statusMessages: Record<string, { title: string; message: string; type: 'info' | 'success' | 'warning' | 'error' }> = {
     'confirmed': {
@@ -71,7 +72,7 @@ export async function createOrderStatusNotification(
     },
     'cancelled': {
       title: 'Order Cancelled',
-      message: `Order ${orderCode}${customerName ? ` for ${customerName}` : ''} has been cancelled. Please contact support for more details.`,
+      message: `Order ${orderCode}${customerName ? ` for ${customerName}` : ''} has been cancelled.${cancelReason ? ` Reason: ${cancelReason}` : ' Please contact support for more details.'}`,
       type: 'error'
     }
   };
@@ -90,7 +91,8 @@ export async function createOrderStatusNotification(
     metadata: {
       oldStatus,
       newStatus,
-      customerName
+      customerName,
+      ...(cancelReason && { cancelReason })
     }
   });
 }

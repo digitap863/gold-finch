@@ -34,7 +34,8 @@ const orderSchema = new mongoose.Schema({
     type: String, 
     enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
-  }
+  },
+  cancelReason: { type: String, required: false }
 }, {
   timestamps: true
 });

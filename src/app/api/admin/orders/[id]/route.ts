@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
 import Order from "@/models/order";
-import Catalog from "@/models/catalog";
-import User from "@/models/user";
 import { withAdminAuth } from "@/lib/api/withAdminAuth";
 import { createOrderStatusNotification } from "@/helpers/createNotification";
+
+// Ensure models are registered
+import "@/models/catalog";
+import "@/models/user";
+import "@/models/catagory";
 
 export async function GET(
   req: NextRequest,
@@ -56,12 +59,17 @@ export async function PUT(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const allowed: string[] = ["status", "priority", "expectedDeliveryDate"];
+    const allowed: string[] = ["status", "priority", "expectedDeliveryDate", "cancelReason"];
     const update: Record<string, unknown> = {};
     for (const key of allowed) {
       if (Object.prototype.hasOwnProperty.call(body, key)) {
         update[key] = body[key];
       }
+    }
+
+    // If status is being set to cancelled, ensure cancelReason is provided
+    if (update.status === 'cancelled' && !update.cancelReason) {
+      return NextResponse.json({ error: "Cancel reason is required when cancelling an order" }, { status: 400 });
     }
 
     if (Object.keys(update).length === 0) {
@@ -85,7 +93,8 @@ export async function PUT(
           order.salesmanId._id.toString(),
           currentOrder.status,
           update.status as string,
-          order.customerName
+          order.customerName,
+          update.cancelReason as string
         );
       } catch (notificationError) {
         console.error("Error creating notification:", notificationError);

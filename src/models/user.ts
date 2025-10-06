@@ -23,6 +23,15 @@ const userSchema = new mongoose.Schema({
   shopAddress: { type: String },
   shopMobile: { type: String },
   isApproved: { type: Boolean, default: false },
+  
+  // Password reset fields
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
+  
+  // OTP fields for password reset
+  otpCode: { type: String },
+  otpExpires: { type: Date },
+  otpVerified: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);

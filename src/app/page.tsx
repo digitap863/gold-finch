@@ -20,6 +20,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showSignupModal, setShowSignupModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const router = useRouter();
 
   const loginMutation = useMutation({
@@ -59,9 +61,52 @@ export default function LoginPage() {
     },
   });
 
+  const forgotPasswordMutation = useMutation({
+    mutationFn: async (identifier: string) => {
+      const res = await fetch("/api/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to send reset link");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast.success("OTP sent to your mobile number");
+      setShowForgotPasswordModal(false);
+      // Redirect to reset password page with mobile parameter
+      router.push(`/reset-password?mobile=${forgotPasswordEmail}`);
+      setForgotPasswordEmail("");
+      // In development, show the OTP in console
+      if (data.otpCode) {
+        console.log("OTP Code:", data.otpCode);
+        toast.info("Check console for OTP (development only)");
+      }
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        toast.error(error.message || "Failed to send OTP");
+      } else {
+        toast.error("Failed to send OTP");
+      }
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     loginMutation.mutate({ identifier, password });
+  };
+
+  const handleForgotPasswordSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!forgotPasswordEmail) {
+      toast.error("Please enter your email or mobile number");
+      return;
+    }
+    forgotPasswordMutation.mutate(forgotPasswordEmail);
   };
 
   return (
@@ -119,6 +164,15 @@ export default function LoginPage() {
                 </Button>
               </div>
             </div>
+            <div className="text-right">
+              <button
+                type="button"
+                className="text-sm text-primary hover:underline focus:outline-none"
+                onClick={() => setShowForgotPasswordModal(true)}
+              >
+                Forgot Password?
+              </button>
+            </div>
             <CardFooter className="p-0">
               <Button type="submit" className="w-full mt-2" disabled={loginMutation.isPending} size="lg">
                 {loginMutation.isPending ? "Logging in..." : "Login"}
@@ -157,6 +211,45 @@ export default function LoginPage() {
             <div className="flex flex-col gap-3 w-full">
               <Button variant="secondary" className="w-full" onClick={() => router.push("/auth/salesman-request")}>Salesman? Request Access</Button>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Forgot Password Modal */}
+      {showForgotPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-2 sm:px-0">
+          <div className="bg-white dark:bg-card rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-xs sm:max-w-sm flex flex-col items-center gap-6 relative">
+            <button
+              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground text-xl font-bold"
+              onClick={() => setShowForgotPasswordModal(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 className="text-lg font-semibold text-center">Forgot Password?</h2>
+            <p className="text-sm text-muted-foreground text-center">Enter your mobile number to receive an OTP for password reset.</p>
+            <form onSubmit={handleForgotPasswordSubmit} className="w-full flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <label htmlFor="forgotEmail" className="text-sm font-medium text-foreground">Mobile Number</label>
+                <Input
+                  id="forgotEmail"
+                  type="tel"
+                  placeholder="Enter your mobile number"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                  required
+                  className="text-base placeholder:text-sm"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={forgotPasswordMutation.isPending}>
+                {forgotPasswordMutation.isPending ? "Checking..." : "Send OTP"}
+              </Button>
+            </form>
+            {forgotPasswordMutation.isError && (
+              <div className="text-center text-destructive text-sm">
+                {forgotPasswordMutation.error instanceof Error ? forgotPasswordMutation.error.message : "Failed to send OTP"}
+              </div>
+            )}
           </div>
         </div>
       )}
