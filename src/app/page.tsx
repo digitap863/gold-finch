@@ -14,6 +14,8 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import Image from "next/image";
+import logo from "../../public/logo.png";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
@@ -112,9 +114,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-muted px-4 sm:px-0">
       <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto px-6 py-8 sm:px-8 sm:py-10 rounded-2xl shadow-lg border border-border bg-card/90 backdrop-blur-md">
         <CardHeader className="flex flex-col items-center gap-2">
-          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-2">
-            <span className="text-2xl font-bold text-primary">GF</span>
-          </div>
+          {/* <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-2">
+            <span className="text-2xl font-bold text-primary">G</span>
+          </div> */}
+          <Image src={logo} alt="Logo" className="w-[25%] h-[25%]"/>
           <CardTitle className="text-2xl font-bold tracking-tight text-center">Login to your account</CardTitle>
           <CardDescription className="text-center">Enter your mobile number and password below</CardDescription>
         </CardHeader>
