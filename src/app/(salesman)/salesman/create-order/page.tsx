@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useRef, useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -34,7 +34,7 @@ function CreateOrderContent() {
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // New fields
   const [karatage, setKaratage] = useState<string>("");
   const [weight, setWeight] = useState<string>("");
@@ -46,7 +46,7 @@ function CreateOrderContent() {
   const [enamel, setEnamel] = useState<boolean>(false);
   const [matte, setMatte] = useState<boolean>(false);
   const [rodium, setRodium] = useState<boolean>(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -75,7 +75,7 @@ function CreateOrderContent() {
     let interval: NodeJS.Timeout;
     if (isRecording) {
       interval = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -84,7 +84,7 @@ function CreateOrderContent() {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const startRecording = async () => {
@@ -92,25 +92,27 @@ function CreateOrderContent() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
-      
+
       const chunks: Blob[] = [];
       mediaRecorder.ondataavailable = (event) => {
         chunks.push(event.data);
       };
-      
+
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+        const blob = new Blob(chunks, {
+          type: mediaRecorder.mimeType || "audio/webm",
+        });
         setAudioBlob(blob);
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       };
-      
+
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingTime(0);
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error("Error starting recording:", error);
     }
   };
 
@@ -160,21 +162,21 @@ function CreateOrderContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!productName.trim() || !customerName.trim()) {
       toast.error("Product name and customer name are required");
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const formData = new FormData();
       formData.append("productName", productName);
       formData.append("customerName", customerName);
       formData.append("customizationDetails", customizationDetails);
       formData.append("expectedDeliveryDate", expectedDeliveryDate);
-      
+
       // New fields
       formData.append("karatage", karatage);
       formData.append("weight", weight);
@@ -186,17 +188,25 @@ function CreateOrderContent() {
       formData.append("enamel", enamel.toString());
       formData.append("matte", matte.toString());
       formData.append("rodium", rodium.toString());
-      
+
       if (catalogId) {
         formData.append("catalogId", catalogId);
       }
 
       // Add voice recording if exists
       if (audioBlob) {
-        const fileExtension = audioBlob.type.includes('webm') ? '.webm' : 
-                             audioBlob.type.includes('mp4') ? '.mp4' : 
-                             audioBlob.type.includes('ogg') ? '.ogg' : '.wav';
-        formData.append("voiceRecording", audioBlob, `recording${fileExtension}`);
+        const fileExtension = audioBlob.type.includes("webm")
+          ? ".webm"
+          : audioBlob.type.includes("mp4")
+            ? ".mp4"
+            : audioBlob.type.includes("ogg")
+              ? ".ogg"
+              : ".wav";
+        formData.append(
+          "voiceRecording",
+          audioBlob,
+          `recording${fileExtension}`
+        );
       }
 
       // Add images
@@ -216,7 +226,7 @@ function CreateOrderContent() {
 
       await response.json();
       toast.success("Order created successfully!");
-      
+
       // Reset form
       setProductName("");
       setCustomerName("");
@@ -227,7 +237,7 @@ function CreateOrderContent() {
       setAudioBlob(null);
       setAudioUrl("");
       setRecordingTime(0);
-      
+
       // Reset new fields
       setKaratage("");
       setWeight("");
@@ -239,13 +249,14 @@ function CreateOrderContent() {
       setEnamel(false);
       setMatte(false);
       setRodium(false);
-      
+
       // Redirect to orders page or show success message
       window.location.href = "/salesman/track-orders";
-      
     } catch (error) {
       console.error("Error creating order:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create order");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create order"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -265,7 +276,7 @@ function CreateOrderContent() {
         </CardHeader>
         <CardContent>
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="product">Product Name</Label>
                 <Input
@@ -278,38 +289,40 @@ function CreateOrderContent() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customer">Customer Name</Label>
-                <Input 
-                  id="customer" 
-                  placeholder="Customer name" 
+                <Input
+                  id="customer"
+                  placeholder="Customer name"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   required
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="details">Customization Details</Label>
-              <Textarea 
-                id="details" 
+              <Textarea
+                id="details"
                 placeholder="Describe any specific requirements, measurements, or customizations needed..."
                 className="min-h-[100px]"
                 value={customizationDetails}
                 onChange={(e) => setCustomizationDetails(e.target.value)}
               />
             </div>
-            
+
             {/* Voice Recording Section */}
             <div className="space-y-4">
               <Label>Voice Recording</Label>
-              
+
               {!audioBlob ? (
                 <div className="flex items-center gap-3">
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     variant={isRecording ? "destructive" : "outline"}
                     className={`flex items-center gap-2 transition-all duration-200 ${
-                      isRecording ? 'animate-pulse bg-red-500 hover:bg-red-600' : ''
+                      isRecording
+                        ? "animate-pulse bg-red-500 hover:bg-red-600"
+                        : ""
                     }`}
                     onClick={isRecording ? stopRecording : startRecording}
                   >
@@ -320,20 +333,28 @@ function CreateOrderContent() {
                       </>
                     ) : (
                       <>
-                        <Mic size={18} /> 
+                        <Mic size={18} />
                         <span>Start Recording</span>
                       </>
                     )}
                   </Button>
-                  
+
                   {isRecording && (
                     <div className="flex items-center gap-2">
                       <div className="flex space-x-1">
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div
+                          className="w-2 h-2 bg-red-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-red-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
                       </div>
-                      <span className="text-sm font-mono text-red-600">{formatTime(recordingTime)}</span>
+                      <span className="text-sm font-mono text-red-600">
+                        {formatTime(recordingTime)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -347,14 +368,16 @@ function CreateOrderContent() {
                     className="flex items-center gap-2"
                   >
                     <Play size={16} />
-                    {isPlaying ? 'Pause' : 'Play'}
+                    {isPlaying ? "Pause" : "Play"}
                   </Button>
-                  
+
                   <div className="flex-1">
                     <div className="text-sm font-medium">Voice Message</div>
-                    <div className="text-xs text-gray-500">{formatTime(recordingTime)}</div>
+                    <div className="text-xs text-gray-500">
+                      {formatTime(recordingTime)}
+                    </div>
                   </div>
-                  
+
                   <Button
                     type="button"
                     variant="outline"
@@ -366,7 +389,7 @@ function CreateOrderContent() {
                   </Button>
                 </div>
               )}
-              
+
               {audioBlob && (
                 <audio
                   ref={audioRef}
@@ -377,18 +400,22 @@ function CreateOrderContent() {
                 />
               )}
             </div>
-            
+
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="images">Upload Images</Label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
                   <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Click to upload images</p>
-                    <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <p className="text-sm font-medium">
+                      Click to upload images
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG, GIF up to 10MB
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       className="mt-2"
@@ -407,12 +434,20 @@ function CreateOrderContent() {
                   />
                 </div>
               </div>
-              
+
               {previews.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {previews.map((src, idx) => (
-                    <div key={idx} className="relative aspect-square border rounded-lg overflow-hidden">
-                      <Image src={src} alt="preview" fill className="object-cover" />
+                    <div
+                      key={idx}
+                      className="relative aspect-square border rounded-lg overflow-hidden"
+                    >
+                      <Image
+                        src={src}
+                        alt="preview"
+                        fill
+                        className="object-cover"
+                      />
                       <button
                         type="button"
                         className="absolute top-2 right-2 bg-white/90 rounded-full p-1 hover:bg-white transition-colors"
@@ -426,141 +461,141 @@ function CreateOrderContent() {
                 </div>
               )}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="deadline">Expected Delivery Date</Label>
-              <Input 
-                type="date" 
-                id="deadline" 
+              <Input
+                type="date"
+                id="deadline"
                 className="w-full"
                 value={expectedDeliveryDate}
                 onChange={(e) => setExpectedDeliveryDate(e.target.value)}
               />
             </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="karatage">Karatage</Label>
-                <Input 
-                  id="karatage" 
-                  placeholder="e.g., 18K" 
+                <Input
+                  id="karatage"
+                  placeholder="e.g., 18K"
                   value={karatage}
                   onChange={(e) => setKaratage(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="weight">Weight</Label>
-                <Input 
-                  id="weight" 
-                  placeholder="e.g., 5.00g" 
+                <Input
+                  id="weight"
+                  placeholder="e.g., 5.00g"
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="colour">Colour</Label>
-                <Input 
-                  id="colour" 
-                  placeholder="e.g., Yellow" 
+                <Input
+                  id="colour"
+                  placeholder="e.g., Yellow"
                   value={colour}
                   onChange={(e) => setColour(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
-                <Input 
-                  id="name" 
-                  placeholder="e.g., Ring Name" 
+                <Input
+                  id="name"
+                  placeholder="e.g., Ring Name,"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
-                             <div className="space-y-2">
-                 <Label>Size</Label>
-                 <div className="flex gap-4">
-                   <label className="flex items-center space-x-2">
-                     <input
-                       type="radio"
-                       name="sizeType"
-                       value="plastic"
-                       checked={sizeType === "plastic"}
-                       onChange={(e) => setSizeType(e.target.value)}
-                     />
-                     <span>Plastic</span>
-                   </label>
-                   <label className="flex items-center space-x-2">
-                     <input
-                       type="radio"
-                       name="sizeType"
-                       value="metal"
-                       checked={sizeType === "metal"}
-                       onChange={(e) => setSizeType(e.target.value)}
-                     />
-                     <span>Metal</span>
-                   </label>
-                 </div>
-                 {sizeType && (
-                   <Input 
-                     placeholder="Enter size value" 
-                     value={sizeValue}
-                     onChange={(e) => setSizeValue(e.target.value)}
-                   />
-                 )}
-               </div>
-                             <div className="col-span-2 space-y-3">
-                 <Label>Additional Features</Label>
-                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                   <label className="flex items-center space-x-2 cursor-pointer">
-                     <input 
-                       type="checkbox" 
-                       id="stone" 
-                       checked={stone}
-                       onChange={(e) => setStone(e.target.checked)}
-                       className="rounded"
-                     />
-                     <span className="text-sm">Stone</span>
-                   </label>
-                   <label className="flex items-center space-x-2 cursor-pointer">
-                     <input 
-                       type="checkbox" 
-                       id="enamel" 
-                       checked={enamel}
-                       onChange={(e) => setEnamel(e.target.checked)}
-                       className="rounded"
-                     />
-                     <span className="text-sm">Enamel</span>
-                   </label>
-                   <label className="flex items-center space-x-2 cursor-pointer">
-                     <input 
-                       type="checkbox" 
-                       id="matte" 
-                       checked={matte}
-                       onChange={(e) => setMatte(e.target.checked)}
-                       className="rounded"
-                     />
-                     <span className="text-sm">Matte</span>
-                   </label>
-                   <label className="flex items-center space-x-2 cursor-pointer">
-                     <input 
-                       type="checkbox" 
-                       id="rodium" 
-                       checked={rodium}
-                       onChange={(e) => setRodium(e.target.checked)}
-                       className="rounded"
-                     />
-                     <span className="text-sm">Rodium</span>
-                   </label>
-                 </div>
-               </div>
+              <div className="space-y-2">
+                <Label>Size</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="sizeType"
+                      value="plastic"
+                      checked={sizeType === "plastic"}
+                      onChange={(e) => setSizeType(e.target.value)}
+                    />
+                    <span>Plastic</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="sizeType"
+                      value="metal"
+                      checked={sizeType === "metal"}
+                      onChange={(e) => setSizeType(e.target.value)}
+                    />
+                    <span>Metal</span>
+                  </label>
+                </div>
+                {sizeType && (
+                  <Input
+                    placeholder="Enter size value"
+                    value={sizeValue}
+                    onChange={(e) => setSizeValue(e.target.value)}
+                  />
+                )}
+              </div>
+              <div className="col-span-1 md:col-span-2 space-y-3">
+                <Label>Additional Features</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      id="stone"
+                      checked={stone}
+                      onChange={(e) => setStone(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Stone</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      id="enamel"
+                      checked={enamel}
+                      onChange={(e) => setEnamel(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Enamel</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      id="matte"
+                      checked={matte}
+                      onChange={(e) => setMatte(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Matte</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      id="rodium"
+                      checked={rodium}
+                      onChange={(e) => setRodium(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Rodium</span>
+                  </label>
+                </div>
+              </div>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button type="submit" className="flex-1" disabled={isSubmitting}>
                 {isSubmitting ? "Creating Order..." : "Submit Order"}
               </Button>
-              <Button type="button" variant="outline" className="flex-1 sm:flex-none">
+              {/* <Button type="button" variant="outline" className="flex-1 sm:flex-none">
                 Save Draft
-              </Button>
+              </Button> */}
             </div>
           </form>
         </CardContent>
@@ -575,4 +610,4 @@ export default function CreateOrderPage() {
       <CreateOrderContent />
     </Suspense>
   );
-} 
+}

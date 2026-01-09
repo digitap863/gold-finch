@@ -24,6 +24,9 @@ const validationSchema = Yup.object({
 export default function SalesmanRequestPage() {
   const [submitted, setSubmitted] = useReactState(false);
   const [showPassword, setShowPassword] = useReactState(false);
+  const [otpSent, setOtpSent] = useReactState(false);
+  const [otpCode, setOtpCode] = useReactState("");
+  const [otpVerified, setOtpVerified] = useReactState(false);
 
   const mutation = useMutation({
     mutationFn: async (values: typeof formik.initialValues) => {
@@ -42,6 +45,9 @@ export default function SalesmanRequestPage() {
       toast.success("Registration submitted! Pending approval by admin.");
       formik.resetForm();
       setSubmitted(true);
+      setOtpSent(false);
+      setOtpVerified(false);
+      setOtpCode("");
     },
     onError: (error: unknown) => {
       if (error instanceof Error) toast.error(error.message);
@@ -61,7 +67,61 @@ export default function SalesmanRequestPage() {
     },
     validationSchema,
     onSubmit: (values) => {
+      if (!otpVerified) {
+        toast.error("Please verify the OTP sent to your mobile number");
+        return;
+      }
       mutation.mutate(values);
+    },
+  });
+
+  // Send OTP to mobile
+  const sendOtpMutation = useMutation({
+    mutationFn: async (mobile: string) => {
+      const res = await fetch("/api/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, context: "signup" }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to send OTP");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setOtpSent(true);
+      setOtpVerified(false);
+      toast.success("OTP sent to your mobile number");
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error) toast.error(error.message);
+      else toast.error("Failed to send OTP");
+    },
+  });
+
+  // Verify OTP
+  const verifyOtpMutation = useMutation({
+    mutationFn: async ({ mobile, code }: { mobile: string; code: string }) => {
+      const res = await fetch("/api/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, code }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Invalid OTP");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setOtpVerified(true);
+      toast.success("Mobile number verified");
+    },
+    onError: (error: unknown) => {
+      setOtpVerified(false);
+      if (error instanceof Error) toast.error(error.message);
+      else toast.error("Invalid OTP");
     },
   });
 
@@ -99,20 +159,62 @@ export default function SalesmanRequestPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <label htmlFor="mobile" className="text-sm font-medium text-foreground">Mobile</label>
-                <Input
-                  id="mobile"
-                  name="mobile"
-                  value={formik.values.mobile}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  required
-                  placeholder="Mobile number"
-                  type="tel"
-                  aria-invalid={formik.touched.mobile && !!formik.errors.mobile}
-                  className="text-base  placeholder:text-sm"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="mobile"
+                    name="mobile"
+                    value={formik.values.mobile}
+                    onChange={(e) => {
+                      setOtpVerified(false);
+                      setOtpSent(false);
+                      formik.handleChange(e);
+                    }}
+                    onBlur={formik.handleBlur}
+                    required
+                    placeholder="Mobile number"
+                    type="tel"
+                    aria-invalid={formik.touched.mobile && !!formik.errors.mobile}
+                    className="text-base  placeholder:text-sm"
+                  />
+                  <Button
+                    type="button"
+                    // variant="secondary"
+                    disabled={!formik.values.mobile || sendOtpMutation.isPending}
+                    onClick={() => sendOtpMutation.mutate(formik.values.mobile)}
+                  >
+                    {sendOtpMutation.isPending ? "Sending..." : otpSent ? "Resend OTP" : "Send OTP"}
+                  </Button>
+                </div>
+                <span className="text-xs text-muted-foreground">Enter 10-digit Indian number or with +91</span>
                 {formik.touched.mobile && formik.errors.mobile && (
                   <span className="text-xs text-destructive mt-1">{formik.errors.mobile}</span>
+                )}
+                {otpSent && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <Input
+                      id="otp"
+                      name="otp"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="Enter 6-digit OTP"
+                      inputMode="numeric"
+                      maxLength={6}
+                      className="text-base placeholder:text-sm"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => verifyOtpMutation.mutate({ mobile: formik.values.mobile, code: otpCode })}
+                      disabled={!otpCode || verifyOtpMutation.isPending}
+                    >
+                      {verifyOtpMutation.isPending ? "Verifying..." : otpVerified ? "Verified" : "Verify"}
+                    </Button>
+                  </div>
+                )}
+                {otpSent && !otpVerified && (
+                  <span className="text-xs text-muted-foreground">Didn&apos;t get OTP? Click Resend OTP.</span>
+                )}
+                {otpVerified && (
+                  <span className="text-xs text-green-600">Mobile number verified</span>
                 )}
               </div>
               <div className="flex flex-col gap-1">
@@ -214,8 +316,13 @@ export default function SalesmanRequestPage() {
                 )}
               </div>
               <CardFooter className="p-0">
-                <Button type="submit" className="w-full mt-2" disabled={mutation.isPending} size="lg">
-                  {mutation.isPending ? "Submitting..." : "Register"}
+                <Button
+                  type="submit"
+                  className="w-full mt-2"
+                  disabled={mutation.isPending || !otpVerified}
+                  size="lg"
+                >
+                  {mutation.isPending ? "Submitting..." : otpVerified ? "Register" : "Verify OTP to Register"}
                 </Button>
               </CardFooter>
             </form>
