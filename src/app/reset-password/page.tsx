@@ -1,21 +1,21 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useMutation } from "@tanstack/react-query";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { toast } from "sonner";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const [step, setStep] = useState<'mobile' | 'otp' | 'password'>('mobile');
   const [mobile, setMobile] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -343,5 +343,25 @@ export default function ResetPasswordPage() {
         {renderStepContent()}
       </Card>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-muted px-4 sm:px-0">
+        <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto px-6 py-8 sm:px-8 sm:py-10 rounded-2xl shadow-lg border border-border bg-card/90 backdrop-blur-md">
+          <CardHeader className="flex flex-col items-center gap-2">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-2 animate-pulse">
+              <span className="text-2xl font-bold text-primary">GF</span>
+            </div>
+            <CardTitle className="text-2xl font-bold tracking-tight text-center">Loading...</CardTitle>
+            <CardDescription className="text-center">Please wait</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
