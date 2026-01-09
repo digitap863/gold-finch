@@ -6,9 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Package, ShoppingCart } from "lucide-react";
-import Image from 'next/image';
-import STLViewer from '@/components/STLViewer';
+import { ArrowLeft, ShoppingCart } from "lucide-react";
+import ImageGallery from '@/components/ImageGallery';
 
 interface Catalog {
   _id: string;
@@ -116,15 +115,7 @@ const CatalogDetailPage = () => {
     }
   };
 
-  const handleDownloadSTL = (fileUrl: string, fileName: string) => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('STL file download started');
-  };
+  
 
   if (loading) {
     return (
@@ -159,7 +150,7 @@ const CatalogDetailPage = () => {
   const selectedFont = fonts.find(f => f._id === selectedFontId);
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 mt-20 sm:mt-10">
+    <div className="container mx-auto  sm:p-4 mt-10">
       {/* Header with Back Button */}
       <div className="mb-6">
         <Button 
@@ -179,7 +170,7 @@ const CatalogDetailPage = () => {
             <p className="text-sm sm:text-base text-muted-foreground mb-3">
               {catalog.description || 'No description available'}
             </p>
-            <div className="flex flex-wrap gap-2">
+            {/* <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs sm:text-sm">
                 {catalog.style}
               </Badge>
@@ -213,7 +204,7 @@ const CatalogDetailPage = () => {
                   {catalogCategory.name}
                 </Badge>
               )}
-            </div>
+            </div> */}
           </div>
           
           <Button
@@ -228,7 +219,7 @@ const CatalogDetailPage = () => {
         </div>
       </div>
 
-      {/* Images Gallery */}
+      {/* Product Images Gallery */}
       {catalog.images && catalog.images.length > 0 && (
         <Card className="mb-6">
           <CardHeader>
@@ -236,21 +227,90 @@ const CatalogDetailPage = () => {
             <CardDescription>{catalog.images.length} image{catalog.images.length > 1 ? 's' : ''}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-              {catalog.images.map((image, index) => (
-                <div key={index} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  <Image
-                    src={image}
-                    alt={`${catalog.title} image ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
+            <ImageGallery images={catalog.images} title={catalog.title} />
           </CardContent>
         </Card>
       )}
+      {/* Product Details */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Product Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div>
+              <span className="text-xs sm:text-sm text-muted-foreground">Style</span>
+              <p className="font-medium text-sm sm:text-base">{catalog.style}</p>
+            </div>
+            {catalog.size && (
+              <div>
+                <span className="text-xs sm:text-sm text-muted-foreground">Size</span>
+                <p className="font-medium text-sm sm:text-base">{catalog.size}</p>
+              </div>
+            )}
+            {catalog.width && (
+              <div>
+                <span className="text-xs sm:text-sm text-muted-foreground">Width</span>
+                <p className="font-medium text-sm sm:text-base">{catalog.width}mm</p>
+              </div>
+            )}
+            {catalog.weight && (
+              <div>
+                <span className="text-xs sm:text-sm text-muted-foreground">Weight</span>
+                <p className="font-medium text-sm sm:text-base">{catalog.weight}g</p>
+              </div>
+            )}
+            {catalog.material && (
+              <div>
+                <span className="text-xs sm:text-sm text-muted-foreground">Material</span>
+                <p className="font-medium text-sm sm:text-base">{catalog.material}</p>
+              </div>
+            )}
+            {catalog.audience && (
+              <div>
+                <span className="text-xs sm:text-sm text-muted-foreground">Audience</span>
+                <p className="font-medium text-sm sm:text-base">{catalog.audience}</p>
+              </div>
+            )}
+            {catalogCategory && (
+              <div>
+                <span className="text-xs sm:text-sm text-muted-foreground">Category</span>
+                <p className="font-medium text-sm sm:text-base">{catalogCategory.name}</p>
+              </div>
+            )}
+            {catalog.fonts && catalog.fonts.length > 0 ? (
+              <div className="col-span-2 sm:col-span-3 lg:col-span-4">
+                <span className="text-xs sm:text-sm text-muted-foreground">Fonts</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {catalog.fonts.map((fontId, index) => {
+                    const font = fonts.find(f => f._id === fontId);
+                    return font ? (
+                      <Badge key={index} variant="outline" className="text-xs" style={{ fontFamily: font.name }}>
+                        {font.name}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            ) : catalogFont && (
+              <div>
+                <span className="text-xs sm:text-sm text-muted-foreground">Font</span>
+                <p className="font-medium text-sm sm:text-base" style={{ fontFamily: catalogFont.name }}>
+                  {catalogFont.name}
+                </p>
+              </div>
+            )}
+            <div>
+              <span className="text-xs sm:text-sm text-muted-foreground">Images</span>
+              <p className="font-medium text-sm sm:text-base">{catalog.images.length}</p>
+            </div>
+            <div>
+              <span className="text-xs sm:text-sm text-muted-foreground">3D Models</span>
+              <p className="font-medium text-sm sm:text-base">{catalog.files?.length || 0}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
 
       {/* Font Preview Section */}
@@ -334,86 +394,7 @@ const CatalogDetailPage = () => {
         </CardContent>
       </Card>
 
-      {/* Product Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Product Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div>
-              <span className="text-xs sm:text-sm text-muted-foreground">Style</span>
-              <p className="font-medium text-sm sm:text-base">{catalog.style}</p>
-            </div>
-            {catalog.size && (
-              <div>
-                <span className="text-xs sm:text-sm text-muted-foreground">Size</span>
-                <p className="font-medium text-sm sm:text-base">{catalog.size}</p>
-              </div>
-            )}
-            {catalog.width && (
-              <div>
-                <span className="text-xs sm:text-sm text-muted-foreground">Width</span>
-                <p className="font-medium text-sm sm:text-base">{catalog.width}mm</p>
-              </div>
-            )}
-            {catalog.weight && (
-              <div>
-                <span className="text-xs sm:text-sm text-muted-foreground">Weight</span>
-                <p className="font-medium text-sm sm:text-base">{catalog.weight}g</p>
-              </div>
-            )}
-            {catalog.material && (
-              <div>
-                <span className="text-xs sm:text-sm text-muted-foreground">Material</span>
-                <p className="font-medium text-sm sm:text-base">{catalog.material}</p>
-              </div>
-            )}
-            {catalog.audience && (
-              <div>
-                <span className="text-xs sm:text-sm text-muted-foreground">Audience</span>
-                <p className="font-medium text-sm sm:text-base">{catalog.audience}</p>
-              </div>
-            )}
-            {catalogCategory && (
-              <div>
-                <span className="text-xs sm:text-sm text-muted-foreground">Category</span>
-                <p className="font-medium text-sm sm:text-base">{catalogCategory.name}</p>
-              </div>
-            )}
-            {catalog.fonts && catalog.fonts.length > 0 ? (
-              <div className="col-span-2 sm:col-span-3 lg:col-span-4">
-                <span className="text-xs sm:text-sm text-muted-foreground">Fonts</span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {catalog.fonts.map((fontId, index) => {
-                    const font = fonts.find(f => f._id === fontId);
-                    return font ? (
-                      <Badge key={index} variant="outline" className="text-xs" style={{ fontFamily: font.name }}>
-                        {font.name}
-                      </Badge>
-                    ) : null;
-                  })}
-                </div>
-              </div>
-            ) : catalogFont && (
-              <div>
-                <span className="text-xs sm:text-sm text-muted-foreground">Font</span>
-                <p className="font-medium text-sm sm:text-base" style={{ fontFamily: catalogFont.name }}>
-                  {catalogFont.name}
-                </p>
-              </div>
-            )}
-            <div>
-              <span className="text-xs sm:text-sm text-muted-foreground">Images</span>
-              <p className="font-medium text-sm sm:text-base">{catalog.images.length}</p>
-            </div>
-            <div>
-              <span className="text-xs sm:text-sm text-muted-foreground">3D Models</span>
-              <p className="font-medium text-sm sm:text-base">{catalog.files?.length || 0}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      
     </div>
   );
 };

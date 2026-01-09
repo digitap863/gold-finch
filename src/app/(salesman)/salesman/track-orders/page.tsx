@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Search, Eye, Package } from "lucide-react";
 
@@ -40,13 +40,11 @@ interface Order {
 }
 
 const TrackOrdersPage = () => {
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [loadingOrder, setLoadingOrder] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -76,24 +74,8 @@ const TrackOrdersPage = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const openOrderModal = async (orderId: string) => {
-    try {
-      setIsDialogOpen(true);
-      setLoadingOrder(true);
-      setSelectedOrder(null);
-      const response = await fetch(`/api/salesman/orders/${orderId}`);
-      if (!response.ok) {
-        throw new Error('Failed to load order details');
-      }
-      const data: Order = await response.json();
-      setSelectedOrder(data);
-    } catch (error) {
-      console.error('Error loading order:', error);
-      toast.error('Failed to load order details');
-      setIsDialogOpen(false);
-    } finally {
-      setLoadingOrder(false);
-    }
+  const viewOrderDetails = (orderId: string) => {
+    router.push(`/salesman/track-orders/${orderId}`);
   };
 
   const getStatusColor = (status: string) => {
@@ -107,15 +89,6 @@ const TrackOrdersPage = () => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'low': return 'bg-gray-100 text-gray-800';
-      case 'medium': return 'bg-blue-100 text-blue-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'urgent': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -188,7 +161,7 @@ const TrackOrdersPage = () => {
               <TableHead>Order</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Priority</TableHead>
+              {/* <TableHead>Priority</TableHead> */}
               <TableHead>Created</TableHead>
               <TableHead>Expected</TableHead>
               <TableHead>Catalog</TableHead>
@@ -205,11 +178,11 @@ const TrackOrdersPage = () => {
                     {order.status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                   <Badge className={`text-xs ${getPriorityColor(order.priority)}`}>
                     {order.priority.toUpperCase()}
                   </Badge>
-                </TableCell>
+                </TableCell> */}
                 <TableCell>{formatDate(order.createdAt)}</TableCell>
                 <TableCell>{order.expectedDeliveryDate ? formatDate(order.expectedDeliveryDate) : '-'}</TableCell>
                 <TableCell>{order.catalogId?.title ?? '-'}</TableCell>
@@ -217,7 +190,7 @@ const TrackOrdersPage = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => openOrderModal(order._id)}
+                    onClick={() => viewOrderDetails(order._id)}
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     View
@@ -229,129 +202,6 @@ const TrackOrdersPage = () => {
         </Table>
       )}
 
-      {/* Order Details Modal */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {loadingOrder ? 'Loading…' : selectedOrder?.productName || 'Order Details'}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedOrder ? `Customer: ${selectedOrder.customerName}` : ''}
-            </DialogDescription>
-          </DialogHeader>
-
-          {loadingOrder ? (
-            <div className="py-10 text-center text-muted-foreground">Fetching order details…</div>
-          ) : selectedOrder ? (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className={`text-xs ${getStatusColor(selectedOrder.status)}`}>
-                  {selectedOrder.status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
-                </Badge>
-                <Badge className={`text-xs ${getPriorityColor(selectedOrder.priority)}`}>
-                  {selectedOrder.priority.toUpperCase()}
-                </Badge>
-              </div>
-
-              {selectedOrder.customizationDetails && (
-                <div>
-                  <div className="text-sm text-gray-500 mb-1">Customization Details</div>
-                  <p className="text-sm">{selectedOrder.customizationDetails}</p>
-                </div>
-              )}
-
-              {selectedOrder.voiceRecording && (
-                <div>
-                  <div className="text-sm text-gray-500 mb-1">Voice Recording</div>
-                  <audio controls className="w-full">
-                    <source src={selectedOrder.voiceRecording} />
-                  </audio>
-                </div>
-              )}
-
-              {selectedOrder.images && selectedOrder.images.length > 0 && (
-                <div>
-                  <div className="text-sm text-gray-500 mb-2">Images</div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {selectedOrder.images.map((img, idx) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={idx} src={img} alt={`Order image ${idx + 1}`} className="w-full h-28 object-cover rounded-md border" />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div>
-                  <div className="text-gray-500">Created</div>
-                  <div className="font-medium">{formatDate(selectedOrder.createdAt)}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500">Expected</div>
-                  <div className="font-medium">{selectedOrder.expectedDeliveryDate ? formatDate(selectedOrder.expectedDeliveryDate) : '-'}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500">Catalog</div>
-                  <div className="font-medium">{selectedOrder.catalogId?.title ?? '-'}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500">Order ID</div>
-                  <div className="font-mono text-xs bg-muted px-2 py-1 rounded">{selectedOrder.orderCode}</div>
-                </div>
-              </div>
-
-              {(selectedOrder.karatage || selectedOrder.weight !== undefined || selectedOrder.colour || selectedOrder.name || selectedOrder.size || selectedOrder.stone || selectedOrder.enamel || selectedOrder.matte || selectedOrder.rodium) && (
-                <div className="pt-2 border-t">
-                  <div className="text-sm font-medium mb-2">Product Specifications</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                    {selectedOrder.karatage && (
-                      <div>
-                        <div className="text-gray-500">Karatage</div>
-                        <div className="font-medium">{selectedOrder.karatage}</div>
-                      </div>
-                    )}
-                    {selectedOrder.weight !== undefined && (
-                      <div>
-                        <div className="text-gray-500">Weight</div>
-                        <div className="font-medium">{selectedOrder.weight} g</div>
-                      </div>
-                    )}
-                    {selectedOrder.colour && (
-                      <div>
-                        <div className="text-gray-500">Colour</div>
-                        <div className="font-medium">{selectedOrder.colour}</div>
-                      </div>
-                    )}
-                    {selectedOrder.name && (
-                      <div>
-                        <div className="text-gray-500">Name</div>
-                        <div className="font-medium">{selectedOrder.name}</div>
-                      </div>
-                    )}
-                    {selectedOrder.size && (selectedOrder.size.type || selectedOrder.size.value) && (
-                      <div className="sm:col-span-2">
-                        <div className="text-gray-500">Size</div>
-                        <div className="font-medium">{selectedOrder.size.type ? selectedOrder.size.type.toUpperCase() : ''}{selectedOrder.size.type && selectedOrder.size.value ? ' - ' : ''}{selectedOrder.size.value ?? ''}</div>
-                      </div>
-                    )}
-                  </div>
-                  {(selectedOrder.stone || selectedOrder.enamel || selectedOrder.matte || selectedOrder.rodium) && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {selectedOrder.stone && (<Badge variant="secondary">Stone</Badge>)}
-                      {selectedOrder.enamel && (<Badge variant="secondary">Enamel</Badge>)}
-                      {selectedOrder.matte && (<Badge variant="secondary">Matte</Badge>)}
-                      {selectedOrder.rodium && (<Badge variant="secondary">Rodium</Badge>)}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="py-10 text-center text-muted-foreground">No order selected</div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

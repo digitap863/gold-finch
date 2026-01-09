@@ -40,15 +40,15 @@ import {
 const data = {
   user: {
     name: "Admin",
-    email: "admin@example.com",
+    email: "admin@gmail.com",
     avatar: "/avatars/admin.jpg",
   },
   navMain: [
-    {
-      title: "Dashboard",
-      url: "/admin/dashboard",
-      icon: IconDashboard,
-    },
+    // {
+    //   title: "Dashboard",
+    //   url: "/admin/dashboard",
+    //   icon: IconDashboard,
+    // },
     {
       title: "Requests",
       url: "/admin/requests",

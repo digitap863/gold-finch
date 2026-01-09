@@ -19,7 +19,6 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const router = useRouter();
@@ -190,30 +189,13 @@ export default function LoginPage() {
         <span className="text-sm text-muted-foreground">Don&apos;t have an account? </span>
         <button
           className="text-sm text-primary font-medium hover:underline focus:outline-none cursor-pointer"
-          onClick={() => setShowSignupModal(true)}
+          onClick={() => router.push("/auth/salesman-request")}
         >
           Sign up
         </button>
       </div>
-      {/* Modal for sign up options */}
-      {showSignupModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-2 sm:px-0">
-          <div className="bg-white dark:bg-card rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-xs sm:max-w-sm flex flex-col items-center gap-6 relative">
-            <button
-              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground text-xl font-bold"
-              onClick={() => setShowSignupModal(false)}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <h2 className="text-lg font-semibold text-center">Sign Up</h2>
-            <p className="text-sm text-muted-foreground text-center">Choose how you want to get started:</p>
-            <div className="flex flex-col gap-3 w-full">
-              <Button variant="secondary" className="w-full" onClick={() => router.push("/auth/salesman-request")}>Salesman? Request Access</Button>
-            </div>
-          </div>
-        </div>
-      )}
+
+      
       
       {/* Forgot Password Modal */}
       {showForgotPasswordModal && (

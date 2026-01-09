@@ -47,9 +47,6 @@ const CatalogsPage = () => {
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sizeFilter, setSizeFilter] = useState('all');
-  const [materialFilter, setMaterialFilter] = useState('all');
-  const [audienceFilter, setAudienceFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [fonts, setFonts] = useState<Font[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -116,11 +113,8 @@ const CatalogsPage = () => {
   const filteredCatalogs = catalogs.filter(catalog => {
     const matchesSearch = catalog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          catalog.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSize = sizeFilter === 'all' || catalog.size?.toLowerCase() === sizeFilter.toLowerCase();
-    const matchesMaterial = materialFilter === 'all' || catalog.material === materialFilter;
-    const matchesAudience = audienceFilter === 'all' || catalog.audience === audienceFilter;
     const matchesCategory = categoryFilter === 'all' || catalog.category === categoryFilter;
-    return matchesSearch && matchesSize && matchesMaterial && matchesAudience && matchesCategory;
+    return matchesSearch && matchesCategory;
   });
 
   const handleViewCatalog = (catalog: Catalog) => {
@@ -166,38 +160,6 @@ const CatalogsPage = () => {
             className="pl-10"
           />
         </div>
-        <Select value={sizeFilter} onValueChange={setSizeFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Filter by size" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Sizes</SelectItem>
-            <SelectItem value="small">Small</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="large">Large</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={materialFilter} onValueChange={setMaterialFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Filter by material" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Materials</SelectItem>
-            <SelectItem value="Gold">Gold</SelectItem>
-            <SelectItem value="Diamond">Diamond</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={audienceFilter} onValueChange={setAudienceFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Filter by audience" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Audiences</SelectItem>
-            <SelectItem value="Men">Men</SelectItem>
-            <SelectItem value="Women">Women</SelectItem>
-            <SelectItem value="Kids">Kids</SelectItem>
-          </SelectContent>
-        </Select>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Filter by category" />
@@ -219,7 +181,7 @@ const CatalogsPage = () => {
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">No catalogs found</h3>
           <p className="text-muted-foreground">
-            {searchTerm || sizeFilter !== 'all' || materialFilter !== 'all' || audienceFilter !== 'all' || categoryFilter !== 'all' ? 'Try adjusting your search or filters' : 'No catalogs available yet'}
+            {searchTerm || categoryFilter !== 'all' ? 'Try adjusting your search or filters' : 'No catalogs available yet'}
           </p>
         </div>
       ) : (

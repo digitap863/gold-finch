@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
   import { Home, PlusCircle, List, Bell, User, LogOut, Package, Menu } from "lucide-react";
 import { IconPointOff } from "@tabler/icons-react";
 import { usePathname } from "next/navigation";
@@ -57,7 +57,6 @@ export default function SalesmanLayout({ children }: { children: React.ReactNode
 
   const SidebarContent = () => (
     <>
-      <div className="text-xl font-bold mb-4">Dashboard</div>
       {sidebarLinks.map((link) => (
         <Link key={link.href} href={link.href} onClick={() => isMobile && setSidebarOpen(false)}>
           <Button
@@ -87,6 +86,7 @@ export default function SalesmanLayout({ children }: { children: React.ReactNode
     <div className="flex min-h-screen">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 bg-muted border-r p-4 flex-col gap-2">
+        <div className="text-xl font-bold mb-4">Dashboard</div>
         <SidebarContent />
       </aside>
 
@@ -98,6 +98,7 @@ export default function SalesmanLayout({ children }: { children: React.ReactNode
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-64 p-4">
+          <SheetTitle className="text-xl font-bold mb-4">Dashboard</SheetTitle>
           <SidebarContent />
         </SheetContent>
       </Sheet>
