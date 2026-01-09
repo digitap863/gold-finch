@@ -1,20 +1,20 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Eye, EyeOff } from "lucide-react";
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useMutation } from "@tanstack/react-query";
+import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 import logo from "../../public/logo.png";
 
 export default function LoginPage() {
@@ -198,7 +198,27 @@ export default function LoginPage() {
         </button>
       </div>
 
-      
+      {/* Contact Information */}
+      <div className="mt-8 text-center w-full max-w-md px-4 absolute bottom-4 right-4 ">
+        <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm  shadow-lg border border-border/50">
+          <p className="text-sm mb-2 font-medium text-gray-800">Contact Us</p>
+          <div className="space-y-1">
+            <p className="text-xs text-foreground/80">
+              Vii 304/2, Martha Bhavan Road, Martha Bhavan P.O
+            </p>
+            <p className="text-xs text-foreground/80">Thrissur - 680005</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mt-2 pt-2 border-t border-border/30">
+              <a href="tel:9947033312" className="text-xs text-primary hover:underline">
+                9947033312
+              </a>
+              <span className="hidden sm:inline text-muted-foreground">•</span>
+              <a href="mailto:hijodavis79@gmail.com" className="text-xs text-primary hover:underline">
+                hijodavis79@gmail.com
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
       
       {/* Forgot Password Modal */}
       {showForgotPasswordModal && (
