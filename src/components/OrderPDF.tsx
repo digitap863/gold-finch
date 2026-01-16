@@ -1,5 +1,5 @@
+import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
 // Define styles for the PDF
 const styles = StyleSheet.create({
@@ -136,6 +136,22 @@ const styles = StyleSheet.create({
     borderRightColor: '#000000',
     fontSize: 10,
     textAlign: 'center',
+  },
+  imagesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  imageWrapper: {
+    width: 120,
+    height: 120,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  orderImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
   },
 });
 
@@ -367,26 +383,21 @@ const OrderPDF: React.FC<OrderPDFProps> = ({ order }) => {
           </View>
         )}
 
-        {/* Media Information */}
-        {/* {(order.voiceRecording || (order.images && order.images.length > 0)) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Media Files</Text>
-            
-            {order.voiceRecording && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Voice Recording:</Text>
-                <Text style={styles.value}>Available (see digital copy)</Text>
-              </View>
-            )}
-            
-            {order.images && order.images.length > 0 && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Images:</Text>
-                <Text style={styles.value}>{order.images.length} image(s) attached</Text>
-              </View>
-            )}
-          </View>
-        )} */}
+        {/* Order Images */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Order Images</Text>
+          {order.images && order.images.length > 0 ? (
+            <View style={styles.imagesContainer}>
+              {order.images.map((img, idx) => (
+                <View key={idx} style={styles.imageWrapper}>
+                  <Image src={img} style={styles.orderImage} />
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.value}>No images uploaded for this order</Text>
+          )}
+        </View>
 
         {/* Catalog Details */}
         {order.catalogId && (

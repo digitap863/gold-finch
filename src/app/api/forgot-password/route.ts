@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
-import User from "@/models/user";
-import twilio from "twilio";
 import { formatMobileNumber, getMobileVariations } from "@/helpers/mobileUtils";
+import { generateOTP, sendOTP } from "@/helpers/smsService";
+import User from "@/models/user";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   await connect();
@@ -36,28 +36,25 @@ export async function POST(req: NextRequest) {
   }
 
   // Generate 6-digit OTP
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpCode = generateOTP();
   const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
   // Save OTP to user
   user.otpCode = otpCode;
   user.otpExpires = otpExpiry;
   user.otpVerified = false;
+  user.otpAttempts = 0; // Reset attempts for new OTP
   await user.save();
 
-  // Initialize Twilio client
-  const client = twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN
-  );
-
   try {
-    // Send OTP via SMS
-    await client.messages.create({
-      body: `Your password reset OTP is: ${otpCode}. This code will expire in 5 minutes.`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: `+${cleanMobile}` // Use the properly formatted mobile number
-    });
+    // Send OTP via SMS Gateway with 'password' context
+    const smsResult = await sendOTP(cleanMobile, otpCode, 'password');
+
+    if (!smsResult.success) {
+      return NextResponse.json({ 
+        error: smsResult.message || "Failed to send OTP. Please try again later." 
+      }, { status: 500 });
+    }
 
     console.log(`OTP sent to ${user.mobile}: ${otpCode}`); // For development
     
@@ -68,7 +65,7 @@ export async function POST(req: NextRequest) {
       otpCode: process.env.NODE_ENV === 'development' ? otpCode : undefined
     });
   } catch (error) {
-    console.error("Twilio SMS error:", error);
+    console.error("SMS Gateway error:", error);
     return NextResponse.json({ 
       error: "Failed to send OTP. Please try again later." 
     }, { status: 500 });

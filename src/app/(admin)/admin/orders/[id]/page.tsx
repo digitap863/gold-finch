@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import OrderPDF from '@/components/OrderPDF';
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Download, Package, FileText } from "lucide-react";
-import { toast } from "sonner";
-import Image from "next/image";
 import { pdf } from '@react-pdf/renderer';
-import OrderPDF from '@/components/OrderPDF';
+import { ArrowLeft, Download, FileText, Package } from "lucide-react";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface OrderDetail {
   _id: string;
@@ -110,12 +110,68 @@ const OrderDetailPage = () => {
     }
   };
 
+  // Convert image URL to base64 via server-side proxy (to avoid CORS issues)
+  const imageToBase64 = async (url: string): Promise<string> => {
+    try {
+      // Use our API proxy to fetch the image server-side
+      const response = await fetch(`/api/image-proxy?url=${encodeURIComponent(url)}`);
+      const data = await response.json();
+      
+      if (data.dataUrl) {
+        console.log('Image converted via proxy, length:', data.dataUrl.length);
+        return data.dataUrl;
+      }
+      
+      console.error('Proxy failed, no dataUrl returned');
+      return url;
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      return url; // Return original URL as fallback
+    }
+  };
+
   const downloadPDF = async () => {
     try {
       if (!order) return;
       
       toast.info('Generating PDF...');
-      const doc = <OrderPDF order={order} />;
+
+      // Convert images to base64 to avoid CORS issues
+      let orderWithBase64Images = { ...order };
+      
+      if (order.images && order.images.length > 0) {
+        console.log('Original images:', order.images);
+        const base64Images = await Promise.all(
+          order.images.map(async (img) => {
+            const base64 = await imageToBase64(img);
+            console.log('Converted image:', img, '-> base64 length:', base64?.length);
+            return base64;
+          })
+        );
+        orderWithBase64Images.images = base64Images;
+        console.log('All images converted:', base64Images.length);
+      } else {
+        console.log('No order images found');
+      }
+
+      // Convert catalog images if present
+      if (order.catalogId?.images && order.catalogId.images.length > 0) {
+        console.log('Converting catalog images...');
+        const base64CatalogImages = await Promise.all(
+          order.catalogId.images.map(img => imageToBase64(img))
+        );
+        orderWithBase64Images = {
+          ...orderWithBase64Images,
+          catalogId: {
+            ...order.catalogId,
+            images: base64CatalogImages
+          }
+        };
+      }
+
+      console.log('Final order images:', orderWithBase64Images.images);
+      
+      const doc = <OrderPDF order={orderWithBase64Images} />;
       const asPdf = pdf(doc);
       const blob = await asPdf.toBlob();
       

@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'gold-finch.s3.ap-south-1.amazonaws.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'gold-finch-new.s3.ap-south-1.amazonaws.com',
+      },
     ],
   },
   eslint:{

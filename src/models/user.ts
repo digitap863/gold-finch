@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
   shopMobile: { type: String },
   isApproved: { type: Boolean, default: false },
   
-  // Password reset fields
+  // OTP fields for password reset
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
   
@@ -32,6 +32,13 @@ const userSchema = new mongoose.Schema({
   otpCode: { type: String },
   otpExpires: { type: Date },
   otpVerified: { type: Boolean, default: false },
+  
+  // OTP verification tracking (for security)
+  otpAttempts: { type: Number, default: 0 },
+  otpLastAttempt: { type: Date },
+  otpRequestCount: { type: Number, default: 0 },
+  otpRequestWindowStart: { type: Date },
+
 }, { timestamps: true });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);

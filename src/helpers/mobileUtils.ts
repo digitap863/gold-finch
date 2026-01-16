@@ -33,3 +33,22 @@ export function getMobileVariations(mobile: string): string[] {
     cleanMobile, // Just the clean number
   ];
 }
+
+/**
+ * Validate if a mobile number is a valid Indian mobile number
+ */
+export function isValidIndianMobile(mobile: string): boolean {
+  const cleanMobile = mobile.replace(/\D/g, '');
+  
+  // Check if it's a valid 10-digit Indian mobile
+  if (cleanMobile.length === 10) {
+    return /^[6-9]\d{9}$/.test(cleanMobile);
+  }
+  
+  // Check if it's a valid 12-digit with country code
+  if (cleanMobile.length === 12) {
+    return /^91[6-9]\d{9}$/.test(cleanMobile);
+  }
+  
+  return false;
+}
