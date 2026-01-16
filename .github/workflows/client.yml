@@ -44,4 +44,4 @@ jobs:
         script: |
           cd /var/www/gold-finch
           npm ci --only=production || npm install --production
-          pm2 restart gold-finch || pm2 start npm --name "gold-finch" -- start
+          pm2 restart gold-finch || pm2 start npm --name "gold-finch" -- start -- -p 3007
