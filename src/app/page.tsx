@@ -111,7 +111,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-muted px-4 sm:px-0">
+    <div className="flex min-h-screen flex-col md:items-center md:justify-center bg-gradient-to-br from-background to-muted px-4 sm:px-0 md:pt-0 pt-5">
       <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto px-6 py-8 sm:px-8 sm:py-10 rounded-2xl shadow-lg border border-border bg-card/90 backdrop-blur-md">
         <CardHeader className="flex flex-col items-center gap-2">
           {/* <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-2">
@@ -122,7 +122,7 @@ export default function LoginPage() {
           <CardDescription className="text-center">Enter your mobile number and password below</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5 mt-2">
+          <form onSubmit={handleSubmit} className="w-full flex flex-col md:gap-5 gap-3 mt-2">
             <div className="flex flex-col gap-1">
               <label htmlFor="identifier" className="text-sm font-medium text-foreground">Email or Mobile</label>
               <Input
@@ -188,7 +188,7 @@ export default function LoginPage() {
           )}
         </CardContent>
       </Card>
-      <div className="mt-6 text-center w-full max-w-md">
+      <div className="md:mt-6 mt-1 text-center w-full max-w-md">
         <span className="text-sm text-muted-foreground">Don&apos;t have an account? </span>
         <button
           className="text-sm text-primary font-medium hover:underline focus:outline-none cursor-pointer"
@@ -199,7 +199,7 @@ export default function LoginPage() {
       </div>
 
       {/* Contact Information */}
-      <div className="mt-8 text-center w-full max-w-md px-4 absolute bottom-4 right-4 ">
+      <div className="mt-8 text-center w-full max-w-md px-4 absolute md:bottom-4 bottom-0 right-4 ">
         <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm  shadow-lg border border-border/50">
           <p className="text-sm mb-2 font-medium text-gray-800">Contact Us</p>
           <div className="space-y-1">
