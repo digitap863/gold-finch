@@ -185,27 +185,71 @@ export async function sendOTP(
       coding: '0', // 0 for English, 2 for Unicode
     };
 
+    // Log the request payload for debugging
+    console.log('SMS Gateway Request:', {
+      url: SMS_CONFIG.apiUrl,
+      mobile: formattedMobile,
+      context,
+      templateId,
+      hasCredentials: !!(SMS_CONFIG.username && SMS_CONFIG.password),
+    });
+
     // Send request to SMS Gateway
-    const response = await axios.post<SMSResponse>(SMS_CONFIG.apiUrl, payload, {
+    const response = await axios.post<any>(SMS_CONFIG.apiUrl, payload, {
       headers: {
         'Content-Type': 'application/json',
       },
       timeout: 10000, // 10 second timeout
+      validateStatus: () => true, // Accept all status codes to inspect response
     });
+
+    // Log raw response for debugging
+    console.log('SMS Gateway Raw Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      contentType: response.headers['content-type'],
+      dataType: typeof response.data,
+      dataPreview: typeof response.data === 'string' 
+        ? (response.data as string).substring(0, 300) 
+        : JSON.stringify(response.data).substring(0, 300),
+    });
+
+    // Check if response is HTML (error page)
+    if (typeof response.data === 'string' && (response.data as string).trim().startsWith('<')) {
+      console.error('SMS Gateway returned HTML instead of JSON:', {
+        status: response.status,
+        htmlPreview: (response.data as string).substring(0, 500),
+      });
+      
+      return {
+        success: false,
+        message: `SMS Gateway API error: Received HTML error page (Status: ${response.status}). Please verify API URL, credentials, and network connectivity.`,
+      };
+    }
+
+    // Check for non-200 status codes
+    if (response.status !== 200) {
+      console.error('SMS Gateway non-200 status:', {
+        status: response.status,
+        data: response.data,
+      });
+      
+      return {
+        success: false,
+        message: `SMS Gateway API error: HTTP ${response.status} - ${response.statusText}`,
+      };
+    }
 
     // Parse and return response
     const result = parseSMSResponse(response.data);
 
-    // Log in development mode
-    if (process.env.NODE_ENV === 'development') {
-      console.log('SMS Gateway Response:', {
-        mobile: formattedMobile,
-        otp,
-        context,
-        templateId,
-        result,
-      });
-    }
+    // Log result
+    console.log('SMS Gateway Result:', {
+      mobile: formattedMobile,
+      context,
+      success: result.success,
+      message: result.message,
+    });
 
     return result;
   } catch (error: any) {
