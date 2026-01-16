@@ -1,6 +1,6 @@
 import { connect } from "@/db.Config/db.Config";
 import { formatMobileNumber, getMobileVariations } from "@/helpers/mobileUtils";
-import { generateOTP } from "@/helpers/smsService";
+import { generateOTP, sendOTP } from "@/helpers/smsService";
 import User from "@/models/user";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -86,14 +86,14 @@ export async function POST(req: NextRequest) {
 
 
       console.log(otpCode)
-      // const smsResult = await sendOTP(cleanMobile, otpCode);
+      const smsResult = await sendOTP(cleanMobile, otpCode);
 
-      // if (!smsResult.success) {
-      //   return NextResponse.json(
-      //     { error: smsResult.message || "Failed to send OTP" },
-      //     { status: 500 }
-      //   );
-      // }
+      if (!smsResult.success) {
+        return NextResponse.json(
+          { error: smsResult.message || "Failed to send OTP" },
+          { status: 500 }
+        );
+      }
 
 
 
@@ -130,14 +130,14 @@ export async function POST(req: NextRequest) {
 
     console.log(otpCode)
     
-    // const smsResult = await sendOTP(cleanMobile, otpCode);
+    const smsResult = await sendOTP(cleanMobile, otpCode);
 
-    // if (!smsResult.success) {
-    //   return NextResponse.json(
-    //     { error: smsResult.message || "Failed to send OTP" },
-    //     { status: 500 }
-    //   );
-    // }
+    if (!smsResult.success) {
+      return NextResponse.json(
+        { error: smsResult.message || "Failed to send OTP" },
+        { status: 500 }
+      );
+    }
 
     if (process.env.NODE_ENV === 'development') {
       console.log(`Signup OTP sent to ${cleanMobile}: ${otpCode}`);
