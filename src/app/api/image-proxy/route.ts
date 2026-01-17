@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,13 +17,25 @@ export async function GET(req: NextRequest) {
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const base64 = buffer.toString('base64');
+    let buffer = Buffer.from(arrayBuffer);
     
     // Get content type
     const contentType = response.headers.get('content-type') || 'image/jpeg';
     
-    // Return as data URL
+    // Convert WebP to JPEG for PDF compatibility (react-pdf doesn't handle WebP well)
+    if (contentType.includes('webp') || url.toLowerCase().endsWith('.webp')) {
+      console.log('Converting WebP to JPEG for PDF compatibility');
+      const convertedBuffer = await sharp(Buffer.from(buffer))
+        .jpeg({ quality: 90 })
+        .toBuffer();
+      
+      const base64 = convertedBuffer.toString('base64');
+      const dataUrl = `data:image/jpeg;base64,${base64}`;
+      return NextResponse.json({ dataUrl });
+    }
+    
+    // For other formats, return as-is
+    const base64 = buffer.toString('base64');
     const dataUrl = `data:${contentType};base64,${base64}`;
     
     return NextResponse.json({ dataUrl });

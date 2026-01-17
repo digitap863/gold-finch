@@ -140,17 +140,17 @@ const styles = StyleSheet.create({
   imagesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 8,
+    marginTop: 10,
   },
   imageWrapper: {
-    width: 120,
-    height: 120,
-    marginRight: 8,
-    marginBottom: 8,
+    width: 180,
+    height: 180,
+    marginRight: 10,
+    marginBottom: 10,
   },
   orderImage: {
-    width: '100%',
-    height: '100%',
+    width: 180,
+    height: 180,
     objectFit: 'cover',
   },
 });
@@ -389,13 +389,18 @@ const OrderPDF: React.FC<OrderPDFProps> = ({ order }) => {
           {order.images && order.images.length > 0 ? (
             <View style={styles.imagesContainer}>
               {order.images.map((img, idx) => (
-                <View key={idx} style={styles.imageWrapper}>
-                  <Image src={img} style={styles.orderImage} />
-                </View>
+                <Image 
+                  key={idx} 
+                  src={img} 
+                  style={{ width: 180, height: 180, marginRight: 10, marginBottom: 10 }} 
+                />
               ))}
             </View>
           ) : (
-            <Text style={styles.value}>No images uploaded for this order</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Status:</Text>
+              <Text style={styles.value}>No images uploaded for this order</Text>
+            </View>
           )}
         </View>
 

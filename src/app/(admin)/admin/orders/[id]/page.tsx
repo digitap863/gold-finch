@@ -134,20 +134,32 @@ const OrderDetailPage = () => {
     try {
       if (!order) return;
       
-      toast.info('Generating PDF...');
+      const toastId = toast.loading('Generating PDF...');
 
       // Convert images to base64 to avoid CORS issues
       let orderWithBase64Images = { ...order };
       
       if (order.images && order.images.length > 0) {
+        const totalImages = order.images.length;
+        toast.loading(`Converting ${totalImages} order image${totalImages > 1 ? 's' : ''}...`, { id: toastId });
+        
         console.log('Original images:', order.images);
-        const base64Images = await Promise.all(
-          order.images.map(async (img) => {
-            const base64 = await imageToBase64(img);
-            console.log('Converted image:', img, '-> base64 length:', base64?.length);
-            return base64;
-          })
-        );
+        const base64Images = [];
+        
+        for (let i = 0; i < order.images.length; i++) {
+          const img = order.images[i];
+          toast.loading(`Converting image ${i + 1}/${totalImages}...`, { id: toastId });
+          const base64 = await imageToBase64(img);
+          console.log('Converted image:', img, '-> base64 length:', base64?.length);
+          console.log('Base64 starts with:', base64?.substring(0, 100));
+          
+          if (base64 && base64.startsWith('data:image')) {
+            base64Images.push(base64);
+          } else {
+            console.error('Invalid base64 for image:', img);
+          }
+        }
+        
         orderWithBase64Images.images = base64Images;
         console.log('All images converted:', base64Images.length);
       } else {
@@ -156,10 +168,19 @@ const OrderDetailPage = () => {
 
       // Convert catalog images if present
       if (order.catalogId?.images && order.catalogId.images.length > 0) {
+        const totalCatalogImages = order.catalogId.images.length;
+        toast.loading(`Converting ${totalCatalogImages} catalog image${totalCatalogImages > 1 ? 's' : ''}...`, { id: toastId });
+        
         console.log('Converting catalog images...');
-        const base64CatalogImages = await Promise.all(
-          order.catalogId.images.map(img => imageToBase64(img))
-        );
+        const base64CatalogImages = [];
+        
+        for (let i = 0; i < order.catalogId.images.length; i++) {
+          const img = order.catalogId.images[i];
+          toast.loading(`Converting catalog image ${i + 1}/${totalCatalogImages}...`, { id: toastId });
+          const base64 = await imageToBase64(img);
+          base64CatalogImages.push(base64);
+        }
+        
         orderWithBase64Images = {
           ...orderWithBase64Images,
           catalogId: {
@@ -170,6 +191,7 @@ const OrderDetailPage = () => {
       }
 
       console.log('Final order images:', orderWithBase64Images.images);
+      toast.loading('Creating PDF document...', { id: toastId });
       
       const doc = <OrderPDF order={orderWithBase64Images} />;
       const asPdf = pdf(doc);
@@ -185,7 +207,7 @@ const OrderDetailPage = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      toast.success('PDF downloaded successfully');
+      toast.success('PDF downloaded successfully', { id: toastId });
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF');
