@@ -189,7 +189,7 @@ const CatalogsPage = () => {
           {filteredCatalogs.map((catalog) => {
             return (
               <Card key={catalog._id} className="overflow-hidden hover:shadow-lg transition-all duration-200 border border-gray-200">
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-1">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-lg font-semibold text-gray-900">
@@ -217,7 +217,7 @@ const CatalogsPage = () => {
                 <CardContent className="space-y-4">
                   {/* Image Preview */}
                   {catalog.images && catalog.images.length > 0 && (
-                    <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden">
+                    <div className="relative h-76 bg-gray-100 rounded-lg overflow-hidden">
                       <Image
                         src={catalog.images[0]}
                         alt={catalog.title}
