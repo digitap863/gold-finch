@@ -553,7 +553,7 @@ const OrderPDF: React.FC<OrderPDFProps> = ({ order }) => {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Generated on {new Date().toLocaleDateString()} • Order ID: {order._id}
+            Generated on {new Date().toLocaleDateString()} • Order ID: {order.orderCode}
           </Text>
         </View>
       </Page>

@@ -1,21 +1,21 @@
 "use client";
-import { useState as useReactState } from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { useFormik } from "formik";
-import * as Yup from "yup";
 import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useFormik } from "formik";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { useState as useReactState } from "react";
+import { toast } from "sonner";
+import * as Yup from "yup";
 
 const validationSchema = Yup.object({
   name: Yup.string().required("Name is required"),
   mobile: Yup.string().required("Mobile is required"),
   email: Yup.string().email("Invalid email address"),
-  password: Yup.string().min(6, "Password is required").required("Password is required"),
+  password: Yup.string().min(6, "Minimum length of password is 6").required("Password is required"),
   shopName: Yup.string().required("Shop name is required"),
   shopAddress: Yup.string().required("Shop address is required"),
   shopMobile: Yup.string().required("Shop mobile is required"),

@@ -6,7 +6,7 @@ const catalogSchema = new mongoose.Schema({
   width: { type: Number },
   category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: false },
   material: { type: String, required: true, enum: ["Gold", "Diamond"] },
-  audience: { type: String, required: true, enum: ['Men', 'Women', 'Kids'] },
+  audience: { type: String, required: true, enum: ['Men', 'Women', 'Kids', 'All'] },
   images: { type: [String], required: true },
   files: { type: [String], required: false }, // For STL and other 3D files
   size: { type: String, required: false },

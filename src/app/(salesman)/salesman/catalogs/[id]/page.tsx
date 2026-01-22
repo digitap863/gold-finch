@@ -23,7 +23,7 @@ interface Catalog {
   fonts?: string[]; // new multiple fonts
   category?: string;
   material?: "Gold" | "Diamond";
-  audience?: "Men" | "Women" | "Kids";
+  audience?: "Men" | "Women" | "Kids" | "All";
   createdAt: string;
 }
 

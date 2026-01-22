@@ -29,7 +29,7 @@ interface Catalog {
   fonts?: string[]; // new multiple fonts
   category?: string;
   material?: "Gold" | "Diamond";
-  audience?: "Men" | "Women" | "Kids";
+  audience?: "Men" | "Women" | "Kids" | "All";
   createdAt: string;
   updatedAt: string;
 }
@@ -250,6 +250,7 @@ export default function AdminCatalogsPage() {
                     <SelectItem value="Men">Men</SelectItem>
                     <SelectItem value="Women">Women</SelectItem>
                     <SelectItem value="Kids">Kids</SelectItem>
+                    <SelectItem value="All">All</SelectItem>
                   </SelectContent>
                 </Select>
                 

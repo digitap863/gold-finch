@@ -26,7 +26,7 @@ const catalogFormSchema = z.object({
   weight: z.string().optional(),
   category: z.string().optional(),
   material: z.enum(["Gold", "Diamond"]),
-  audience: z.enum(["Men", "Women", "Kids"]),
+  audience: z.enum(["Men", "Women", "Kids", "All"]),
   fonts: z.array(z.string()).optional(),
   description: z.string().optional(),
 });
@@ -419,6 +419,7 @@ const CatalogPage = () => {
                             <SelectValue placeholder="Select audience" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="All">All</SelectItem>
                             <SelectItem value="Men">Men</SelectItem>
                             <SelectItem value="Women">Women</SelectItem>
                             <SelectItem value="Kids">Kids</SelectItem>

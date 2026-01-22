@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const fonts = formData.getAll("fonts") as string[]; // new multiple fonts
     const category = formData.get("category") as string | null;
     const material = formData.get("material") as ("Gold" | "Diamond") | null;
-    const audience = formData.get("audience") as ("Men" | "Women" | "Kids") | null;
+    const audience = formData.get("audience") as ("Men" | "Women" | "Kids" | "All") | null;
     const description = formData.get("description") as string;
     const files = formData.getAll("images") as File[];
 
