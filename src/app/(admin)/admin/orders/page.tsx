@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { Eye, Search } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface AdminOrderItem {
   _id: string;
@@ -100,8 +100,8 @@ const AdminOrdersPage = () => {
     }
   };
 
-  const navigateToOrder = (orderId: string) => {
-    window.location.href = `/admin/orders/${orderId}`;
+  const navigateToOrder = (orderCode: string) => {
+    window.location.href = `/admin/orders/${orderCode}`;
   };
 
   const updateOrderField = async (orderId: string, payload: Partial<Pick<AdminOrderItem, 'status' | 'priority' | 'expectedDeliveryDate' | 'cancelReason'>>) => {
@@ -370,7 +370,7 @@ const AdminOrdersPage = () => {
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="outline" size="sm" onClick={() => navigateToOrder(o._id)}>
+                  <Button variant="outline" size="sm" onClick={() => navigateToOrder(o.orderCode)}>
                     <Eye className="h-4 w-4 mr-2" />
                     View
                   </Button>

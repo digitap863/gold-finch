@@ -481,7 +481,7 @@ const OrderDetailPage = () => {
           )}
 
           {/* Catalog Details */}
-          {order.catalogId && (
+          {/* {order.catalogId && (
             <Card>
               <CardHeader>
                 <CardTitle>Catalog Details</CardTitle>
@@ -576,7 +576,7 @@ const OrderDetailPage = () => {
                 )}
               </CardContent>
             </Card>
-          )}
+          )} */}
         </div>
 
         {/* Order Controls */}

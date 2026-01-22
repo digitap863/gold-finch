@@ -1,19 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { toast } from "sonner";
-import { Eye, Edit, Trash2, Plus, Search, Download } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import STLViewer from '@/components/STLViewer';
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Edit, Eye, Plus, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Catalog {
   _id: string;
@@ -47,8 +45,6 @@ interface Category {
 }
 
 export default function AdminCatalogsPage() {
-  const [selectedCatalog, setSelectedCatalog] = useState<Catalog | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,6 +55,7 @@ export default function AdminCatalogsPage() {
     audience: "all",
     category: "all",
   });
+  const [selectedCatalog, setSelectedCatalog] = useState<Catalog | null>(null);
   const itemsPerPage = 10;
   const queryClient = useQueryClient();
 
@@ -404,158 +401,12 @@ export default function AdminCatalogsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Dialog open={isViewDialogOpen && selectedCatalog?._id === catalog._id} onOpenChange={(open: boolean) => {
-                            if (open) {
-                              setSelectedCatalog(catalog);
-                              setIsViewDialogOpen(true);
-                            } else {
-                              setIsViewDialogOpen(false);
-                              setSelectedCatalog(null);
-                            }
-                          }}>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <Eye className="w-4 h-4 mr-1" />
-                                View
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>{catalog.title}</DialogTitle>
-                                <DialogDescription>
-                                  Complete catalog details
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <h4 className="font-semibold mb-2">Basic Information</h4>
-                                  <div className="space-y-2 text-sm">
-                                    <div><span className="font-medium">Title:</span> {catalog.title}</div>
-                                    <div><span className="font-medium">Style:</span> <Badge variant="secondary" className="bg-blue-100 text-blue-700 ml-2">{catalog.style}</Badge></div>
-                                    <div><span className="font-medium">Size:</span> {catalog.size || 'Not specified'}</div>
-                                    <div><span className="font-medium">Width:</span> {catalog.width ? `${catalog.width}mm` : 'Not specified'}</div>
-                                    <div><span className="font-medium">Weight:</span> {formatWeight(catalog.weight || 0)}</div>
-                                    <div><span className="font-medium">Category:</span> {catalogCategory ? (
-                                      <Badge variant="outline" className="bg-green-50 text-green-700 ml-2">
-                                        {catalogCategory.name}
-                                      </Badge>
-                                    ) : (
-                                      <span className="text-muted-foreground ml-2">Not specified</span>
-                                    )}</div>
-                                    <div><span className="font-medium">Material:</span> {catalog.material ? (
-                                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700 ml-2">
-                                        {catalog.material}
-                                      </Badge>
-                                    ) : (
-                                      <span className="text-muted-foreground ml-2">Not specified</span>
-                                    )}</div>
-                                    <div><span className="font-medium">Audience:</span> {catalog.audience ? (
-                                      <Badge variant="outline" className="bg-purple-50 text-purple-700 ml-2">
-                                        {catalog.audience}
-                                      </Badge>
-                                    ) : (
-                                      <span className="text-muted-foreground ml-2">Not specified</span>
-                                    )}</div>
-                                    <div><span className="font-medium">Fonts:</span> {(() => {
-                                      const catalogFonts = catalog.fonts ? catalog.fonts.map(fontId => fonts.find(f => f._id === fontId)).filter(Boolean) : [];
-                                      if (catalogFonts.length > 0) {
-                                        return (
-                                          <div className="flex flex-wrap gap-1 ml-2">
-                                            {catalogFonts.map((font, index) => (
-                                              <Badge key={index} variant="outline" style={{ fontFamily: font?.name }}>
-                                                {font?.name}
-                                              </Badge>
-                                            ))}
-                                          </div>
-                                        );
-                                      } else if (catalogFont) {
-                                        return (
-                                          <Badge variant="outline" className="ml-2" style={{ fontFamily: catalogFont.name }}>
-                                            {catalogFont.name}
-                                          </Badge>
-                                        );
-                                      } else {
-                                        return <span className="text-muted-foreground ml-2">No font assigned</span>;
-                                      }
-                                    })()}</div>
-                                    <div><span className="font-medium">Description:</span> {catalog.description || 'No description'}</div>
-                                  </div>
-                                </div>
-                                
-                                {catalog.images && catalog.images.length > 0 && (
-                                  <div>
-                                    <h4 className="font-semibold mb-2">Images ({catalog.images.length})</h4>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      {catalog.images.map((image, index) => (
-                                        <Image
-                                          key={index}
-                                          src={image}
-                                          alt={`${catalog.title} image ${index + 1}`}
-                                          width={100}
-                                          height={100}
-                                          className="w-full h-32 object-cover rounded-lg"
-                                        />
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                                
-                                {catalog.files && catalog.files.length > 0 && (
-                                  <div>
-                                    <h4 className="font-semibold mb-2">3D Models ({catalog.files.length})</h4>
-                                    <div className="space-y-4">
-                                      {catalog.files.map((file, index) => (
-                                        <div key={index} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                                          {/* File Header */}
-                                          <div className="flex items-center justify-between mb-4">
-                                            <div className="flex items-center space-x-3">
-                                              <div className="p-2 bg-blue-100 rounded-lg">
-                                                <Download className="h-5 w-5 text-blue-600" />
-                                              </div>
-                                              <div>
-                                                <h4 className="font-semibold text-gray-900">
-                                                  {catalog.title} - Model {index + 1}
-                                                </h4>
-                                                <p className="text-sm text-gray-500">STL 3D Model</p>
-                                              </div>
-                                            </div>
-                                            <Button
-                                              variant="default"
-                                              size="sm"
-                                              className="bg-blue-600 hover:bg-blue-700 text-white"
-                                              onClick={() => handleDownloadSTL(file, `${catalog.title}_${index + 1}.stl`)}
-                                            >
-                                              <Download className="h-4 w-4 mr-2" />
-                                              Download STL
-                                            </Button>
-                                          </div>
-                                          
-                                          {/* 3D Viewer */}
-                                          <div className="relative">
-                                            <div className="h-80 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200">
-                                              <STLViewer 
-                                                url={file} 
-                                                className="w-full h-full"
-                                              />
-                                            </div>
-                                            
-                                            {/* Viewer Controls Info */}
-                                            <div className="mt-3 text-center">
-                                              <p className="text-xs text-gray-500">
-                                                💡 Drag to rotate • Scroll to zoom • Right-click to pan
-                                              </p>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                                
-
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                          <Link href={`/admin/catalogs/${catalog._id}`}>
+                            <Button variant="outline" size="sm">
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                          </Link>
                           
                           <Link href={`/admin/catalogs/edit/${catalog._id}`}>
                             <Button variant="outline" size="sm">

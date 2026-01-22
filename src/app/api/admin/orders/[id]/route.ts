@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
-import Order from "@/models/order";
-import { withAdminAuth } from "@/lib/api/withAdminAuth";
 import { createOrderStatusNotification } from "@/helpers/createNotification";
+import { withAdminAuth } from "@/lib/api/withAdminAuth";
+import Order from "@/models/order";
+import { NextRequest, NextResponse } from "next/server";
 
 // Ensure models are registered
+import "@/models/catagory";
 import "@/models/catalog";
 import "@/models/user";
-import "@/models/catagory";
 
 export async function GET(
   req: NextRequest,
@@ -20,7 +20,7 @@ export async function GET(
 
   try {
     const { id } = await params;
-    const order = await Order.findById(id)
+    const order = await Order.findOne({ orderCode: id })
       .populate({
         path: "catalogId",
         select: "title images description style size weight files font",
@@ -50,11 +50,11 @@ export async function PUT(
   if (authResult) return authResult;
 
   try {
-    const { id: orderId } = await params;
+    const { id: orderCode } = await params;
     const body = await req.json();
 
     // Get current order to check for status changes
-    const currentOrder = await Order.findById(orderId);
+    const currentOrder = await Order.findOne({ orderCode });
     if (!currentOrder) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
@@ -76,7 +76,11 @@ export async function PUT(
       return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
     }
 
-    const order = await Order.findByIdAndUpdate(orderId, update, { new: true })
+    const order = await Order.findOneAndUpdate(
+      { orderCode },
+      update,
+      { new: true }
+    )
       .populate("catalogId", "title")
       .populate("salesmanId", "name email mobile shopName shopAddress shopMobile");
 
