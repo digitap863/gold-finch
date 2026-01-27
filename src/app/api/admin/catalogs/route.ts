@@ -86,7 +86,7 @@ export async function GET() {
   try {
     await connect();
 
-    const catalogs = await Catalog.find({}).sort({ createdAt: -1 });
+    const catalogs = await Catalog.find({});
 
     return NextResponse.json(catalogs);
   } catch (error) {

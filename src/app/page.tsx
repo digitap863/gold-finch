@@ -15,7 +15,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import logo from "../../public/logo.png";
+import logo from "../../public/logoo.png";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
@@ -117,7 +117,7 @@ export default function LoginPage() {
           {/* <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-2">
             <span className="text-2xl font-bold text-primary">G</span>
           </div> */}
-          <Image src={logo} alt="Logo" className="w-[25%] h-[25%]"/>
+          <Image src={logo} alt="Logo" className="w-[55%] h-[25%]"/>
           <CardTitle className="text-2xl font-bold tracking-tight text-center">Login to your account</CardTitle>
           <CardDescription className="text-center">Enter your mobile number and password below</CardDescription>
         </CardHeader>
