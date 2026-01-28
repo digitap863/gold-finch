@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { toast } from "sonner";
-import { ArrowLeft, X, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Loader2, X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const catalogFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -23,7 +23,7 @@ const catalogFormSchema = z.object({
   size: z.string().min(1, "Size is required"),
   weight: z.string().min(1, "Weight is required"),
   font: z.string().min(1, "Font is required"),
-  description: z.string().min(1, "Description is required"),
+  description: z.string().optional(),
 });
 
 type CatalogFormData = z.infer<typeof catalogFormSchema>;
@@ -34,7 +34,8 @@ interface Catalog {
   style: string;
   size: string;
   weight: number;
-  font: string;
+  font: string | string[] | { _id: string; name: string }; // Can be string, array, or object
+  fonts?: string[] | { _id: string; name: string }[]; // Add plural fonts field
   description: string;
   images: string[];
   files: string[];
@@ -99,21 +100,46 @@ export default function EditCatalogPage() {
     },
   });
 
-  // Update form when catalog data is loaded
+  // Update form when catalog data is loaded AND fonts are available
   useEffect(() => {
-    if (catalog) {
+    if (catalog && fonts.length > 0) {
+      // Handle fonts - it can be an array, object, or string
+      let fontValue = '';
+      
+      // Check fonts array first (plural)
+      if (Array.isArray(catalog.fonts) && catalog.fonts.length > 0) {
+        const first = catalog.fonts[0];
+        fontValue = typeof first === 'string' ? first : first?._id || '';
+      } 
+      // Then check font field (singular)
+      else if (catalog.font) {
+        if (Array.isArray(catalog.font)) {
+          const first = catalog.font[0];
+          fontValue = typeof first === 'string' ? first : first || '';
+        } else if (typeof catalog.font === 'object' && catalog.font !== null) {
+          fontValue = (catalog.font as any)._id || '';
+        } else if (typeof catalog.font === 'string') {
+          fontValue = catalog.font;
+        }
+      }
+
+      console.log('Setting font value:', fontValue); // Debug log
+
+      console.log('Catalog fonts:', catalog.fonts); // Debug log
+
+      console.log('Catalog font:', catalog.font); // Debug log --- comming as undeined 
       form.reset({
         title: catalog.title,
         style: catalog.style,
         size: catalog.size,
         weight: catalog.weight.toString(),
-        font: catalog.font,
-        description: catalog.description,
+        font: fontValue,
+        description: catalog.description || "",
       });
       setExistingImages(catalog.images || []);
       setExistingFiles(catalog.files || []);
     }
-  }, [catalog, form]);
+  }, [catalog, fonts, form]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -152,7 +178,9 @@ export default function EditCatalogPage() {
       formData.append("size", data.size);
       formData.append("weight", data.weight);
       formData.append("font", data.font);
-      formData.append("description", data.description);
+      formData.append("description", data.description || "");
+
+      console.log("formData", formData);
 
       // Add new files
       [...selectedImages, ...selectedFiles].forEach((file) => {
@@ -211,6 +239,8 @@ export default function EditCatalogPage() {
       setIsSubmitting(false);
     }
   };
+
+  console.log("catalog", catalog);
 
   if (isLoading) {
     return (
@@ -349,7 +379,7 @@ export default function EditCatalogPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description *</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Enter description"
@@ -513,4 +543,4 @@ export default function EditCatalogPage() {
       </Card>
     </div>
   );
-} 
+}

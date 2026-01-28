@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
-import Catalog from "@/models/catalog";
 import { uploadFile } from "@/helpers/fileUpload";
+import Catalog from "@/models/catalog";
+import { NextRequest, NextResponse } from "next/server";
 
 async function extractId(context: unknown, req: NextRequest): Promise<string | null> {
   if (context && typeof context === "object" && "params" in context) {
@@ -22,7 +22,7 @@ export async function GET(
     
     const catalogId = await extractId(context, req);
     
-    const catalog = await Catalog.findById(catalogId);
+    const catalog = await Catalog.findById(catalogId).populate("font").populate("fonts");
     
     if (!catalog) {
       return NextResponse.json(
@@ -59,9 +59,9 @@ export async function PUT(
     const description = formData.get("description") as string;
     
     // Validation
-    if (!title || !style || !size || !weight || !font || !description) {
+    if (!title || !style || !size || !weight || !font) {
       return NextResponse.json(
-        { error: "All fields are required" },
+        { error: "All fields except description are required" },
         { status: 400 }
       );
     }
@@ -123,7 +123,8 @@ export async function PUT(
         style,
         size,
         weight,
-        font,
+        font: font || undefined,
+        fonts: font ? [font] : undefined,
         description,
         images: finalImages,
         files: finalFiles,
