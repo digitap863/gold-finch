@@ -112,12 +112,12 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col md:items-center md:justify-center bg-gradient-to-br from-background to-muted px-4 sm:px-0 md:pt-0 pt-5">
-      <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto px-6 py-8 sm:px-8 sm:py-10 rounded-2xl shadow-lg border border-border bg-card/90 backdrop-blur-md">
+      <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto px-6 py-7 sm:px-8 sm:py-10 rounded-2xl shadow-lg border border-border bg-card/90 backdrop-blur-md">
         <CardHeader className="flex flex-col items-center gap-2">
           {/* <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-2">
             <span className="text-2xl font-bold text-primary">G</span>
           </div> */}
-          <Image src={logo} alt="Logo" className="w-[55%] h-[25%]"/>
+          <Image src={logo} alt="Logo" className="md:w-[55%] w-[60%] h-[25%]"/>
           <CardTitle className="text-2xl font-bold tracking-tight text-center">Login to your account</CardTitle>
           <CardDescription className="text-center">Enter your mobile number and password below</CardDescription>
         </CardHeader>
@@ -199,7 +199,7 @@ export default function LoginPage() {
       </div>
 
       {/* Contact Information */}
-      <div className="mt-8 text-center w-full max-w-md px-4 absolute md:bottom-4 bottom-0 right-4 ">
+      <div className="mt-8 text-center w-full max-w-md px-4 absolute md:bottom-4 bottom-0 right-0create new ">
         <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm  shadow-lg border border-border/50">
           <p className="text-sm mb-2 font-medium text-gray-800">Contact Us</p>
           <div className="space-y-1">

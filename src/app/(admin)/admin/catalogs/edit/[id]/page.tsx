@@ -262,7 +262,7 @@ export default function EditCatalogPage() {
   }
 
   return (
-    <div className="space-y-6 p-10">
+    <div className="space-y-6 md:p-10 p-4">
       <div className="flex items-center gap-4">
         <Link href="/admin/catalogs">
           <Button variant="outline" size="sm">

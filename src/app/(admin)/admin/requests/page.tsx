@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, Clock, Eye, X } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Eye, Check, X, Clock } from "lucide-react";
 
 interface SalesmanRequest {
   _id: string;
@@ -124,7 +124,7 @@ export default function AdminRequestsPage() {
   }
 
   return (
-    <div className="space-y-6 p-10">
+    <div className="space-y-6 md:p-10 p-4">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Salesman Requests</h1>
         <p className="text-muted-foreground">

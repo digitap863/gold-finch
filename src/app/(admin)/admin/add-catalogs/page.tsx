@@ -1,21 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
-import Image from 'next/image';
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, X } from "lucide-react";
+import Image from 'next/image';
+import React, { useEffect, useState } from 'react';
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
 
 // Catalog form schema
 const catalogFormSchema = z.object({
@@ -196,10 +196,14 @@ const CatalogPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Add New Catalog</h1>
-        <p className="text-muted-foreground">Create a new catalog item with images and details</p>
+    <div className="space-y-6 md:p-10 p-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Add New Catalog</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
+            Create a new catalog item with images and details
+          </p>
+        </div>
       </div>
 
       <Card className="max-w-3xl">
@@ -240,7 +244,7 @@ const CatalogPage = () => {
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="size"
@@ -248,7 +252,7 @@ const CatalogPage = () => {
                     <FormItem>
                       <FormLabel>Size</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Small, Medium, Large" {...field} />
+                        <Input placeholder="e.g., Small, Medium" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -264,7 +268,7 @@ const CatalogPage = () => {
                       <FormControl>
                         <Input 
                           type="number" 
-                          step="1" 
+                          step="0.01" 
                           placeholder="0" 
                           {...field}
                         />
@@ -361,7 +365,7 @@ const CatalogPage = () => {
                 }}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="category"
@@ -371,7 +375,7 @@ const CatalogPage = () => {
                       <FormControl>
                         <Select value={field.value} onValueChange={field.onChange} disabled={categoriesLoading}>
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder={categoriesLoading ? "Loading categories..." : "Select category (optional)"} />
+                            <SelectValue placeholder={categoriesLoading ? "Loading..." : "Select category"} />
                           </SelectTrigger>
                           <SelectContent>
                             {categories.map((c) => (
@@ -494,8 +498,8 @@ const CatalogPage = () => {
 
               </div>
 
-              <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2 w-full sm:w-auto">
                   <Plus className="h-4 w-4" />
                   {isSubmitting ? "Creating..." : "Create Catalog"}
                 </Button>
@@ -506,6 +510,7 @@ const CatalogPage = () => {
                     form.reset();
                     setSelectedImages([]);
                   }}
+                  className="w-full sm:w-auto"
                 >
                   Reset Form
                 </Button>

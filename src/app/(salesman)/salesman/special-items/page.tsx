@@ -31,7 +31,7 @@ const SalesmanSpecialItemsPage = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 pt-10">
       <div>
         <h1 className="text-2xl font-bold">Special Items</h1>
         <p className="text-muted-foreground">Browse available special items.</p>

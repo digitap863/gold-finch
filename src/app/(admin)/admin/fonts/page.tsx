@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface Font {
   _id: string;
@@ -74,46 +75,70 @@ const FontListPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Font List</h1>
+    <div className="space-y-6 md:p-10 p-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Fonts</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
+            Manage your custom brand fonts
+          </p>
+        </div>
+        <Link href="/admin/add-fonts" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Font
+          </Button>
+        </Link>
+      </div>
       {loading ? (
-        <div>Loading fonts...</div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Loading fonts...</div>
+        </div>
       ) : fonts.length === 0 ? (
-        <div>No fonts found.</div>
+        <div className="text-center py-12 border rounded-lg bg-muted/50">
+          <p className="text-muted-foreground">No fonts found.</p>
+        </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {fonts.map((font) => (
             <div
               key={font._id}
-              className="p-6 border rounded-lg bg-white shadow-sm flex flex-col items-start"
+              className="p-4 md:p-6 border rounded-xl bg-card shadow-sm flex flex-col items-start transition-all hover:shadow-md dark:bg-muted/20"
             >
-              <div className="flex items-center w-full justify-between mb-2">
-                <div className="text-lg font-semibold">{font.name}</div>
+              <div className="flex items-center w-full justify-between mb-4">
+                <div className="text-base md:text-lg font-semibold truncate pr-2">{font.name}</div>
                 <button
                   title="Delete font"
                   onClick={() => handleDeleteClick(font)}
-                  className="text-red-500 hover:text-red-700 p-1 rounded-full border border-transparent hover:border-red-200 transition"
+                  className="text-destructive hover:bg-destructive/10 p-2 rounded-full transition-colors"
                 >
-                  <Trash2 className="h-5 w-5" />
+                  <Trash2 className="h-4 w-4 md:h-5 md:w-5" />
                 </button>
               </div>
               <div
+                className="flex items-center justify-center rounded-lg border border-dashed border-muted-foreground/20 bg-muted/30 dark:bg-muted/10 w-full"
                 style={{
                   fontFamily: font.name,
-                  fontSize: 32,
-                  fontWeight: 400,
-                  border: "1px dashed #ddd",
-                  padding: "12px 0",
-                  width: "100%",
+                  padding: "24px 12px",
                   textAlign: "center",
                 }}
               >
-                {font.name}
+                <span className="text-2xl md:text-3xl lg:text-4xl break-all">
+                  {font.name}
+                </span>
               </div>
-              <div className="mt-2 text-xs text-gray-500">
-                Files: {font.files.map((f, i) => (
-                  <span key={i}>{f.split("/").pop()}{i < font.files.length - 1 ? ", " : ""}</span>
-                ))}
+              <div className="mt-4 w-full">
+                <p className="text-[10px] md:text-xs font-medium text-muted-foreground mb-1">FONT FILES</p>
+                <div className="flex flex-wrap gap-1">
+                  {font.files.map((f, i) => (
+                    <span 
+                      key={i} 
+                      className="px-2 py-0.5 bg-muted rounded text-[10px] md:text-xs truncate max-w-[150px]"
+                    >
+                      {f.split("/").pop()}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           ))}

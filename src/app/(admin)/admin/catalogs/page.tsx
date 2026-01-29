@@ -190,16 +190,16 @@ export default function AdminCatalogsPage() {
   }
 
   return (
-    <div className="space-y-6 p-10">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 md:p-10 p-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Catalogs</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Catalogs</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Manage your product catalog
           </p>
         </div>
-        <Link href="/admin/add-catalogs">
-          <Button>
+        <Link href="/admin/add-catalogs" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             Add Catalog
           </Button>
@@ -215,20 +215,20 @@ export default function AdminCatalogsPage() {
           <div className="space-y-4">
             {/* Search and Filters */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1 max-w-sm">
+              <div className="relative flex-1 w-full sm:max-w-sm">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search catalogs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
+                  className="pl-8 w-full"
                 />
               </div>
               
               {/* Filter Dropdowns */}
               <div className="flex flex-wrap gap-2">
                 <Select value={filters.material} onValueChange={(value) => setFilters(prev => ({ ...prev, material: value }))}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-full sm:w-[140px]">
                     <SelectValue placeholder="Material" />
                   </SelectTrigger>
                   <SelectContent>
@@ -239,7 +239,7 @@ export default function AdminCatalogsPage() {
                 </Select>
                 
                 <Select value={filters.audience} onValueChange={(value) => setFilters(prev => ({ ...prev, audience: value }))}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-full sm:w-[140px]">
                     <SelectValue placeholder="Audience" />
                   </SelectTrigger>
                   <SelectContent>
@@ -252,7 +252,7 @@ export default function AdminCatalogsPage() {
                 </Select>
                 
                 <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-full sm:w-[140px]">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -272,6 +272,7 @@ export default function AdminCatalogsPage() {
                     setFilters({ material: "all", audience: "all", category: "all" });
                     setSearchTerm("");
                   }}
+                  className="w-full sm:w-auto"
                 >
                   Clear Filters
                 </Button>
@@ -279,7 +280,7 @@ export default function AdminCatalogsPage() {
             </div>
             
             {/* Results Summary */}
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center justify-between md:text-sm text-xs text-muted-foreground">
               <div>
                 Showing {startIndex + 1} to {Math.min(endIndex, filteredCatalogs.length)} of {filteredCatalogs.length} catalogs
                 {(searchTerm || filters.material !== "all" || filters.audience !== "all" || filters.category !== "all") && (
@@ -309,20 +310,21 @@ export default function AdminCatalogsPage() {
         <CardContent>
           {paginatedCatalogs.length > 0 ? (
             <>
+              <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
+                    <TableHead className="min-w-[150px]">Name</TableHead>
                     <TableHead>Style</TableHead>
-                    <TableHead>Size</TableHead>
-                    <TableHead>Width</TableHead>
-                    <TableHead>Weight</TableHead>
+                    <TableHead className="hidden md:table-cell">Size</TableHead>
+                    <TableHead className="hidden lg:table-cell">Width</TableHead>
+                    <TableHead className="hidden lg:table-cell">Weight</TableHead>
                     <TableHead>Category</TableHead>
-                    <TableHead>Material</TableHead>
-                    <TableHead>Audience</TableHead>
-                    <TableHead>Fonts</TableHead>
-                    <TableHead>Images</TableHead>
-                    <TableHead>Files</TableHead>
+                    <TableHead className="hidden sm:table-cell">Material</TableHead>
+                    <TableHead className="hidden sm:table-cell">Audience</TableHead>
+                    <TableHead className="hidden xl:table-cell">Fonts</TableHead>
+                    <TableHead className="hidden lg:table-cell">Images</TableHead>
+                    <TableHead className="hidden lg:table-cell">Files</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -339,9 +341,9 @@ export default function AdminCatalogsPage() {
                           {catalog.style}
                         </Badge>
                       </TableCell>
-                      <TableCell>{catalog.size || '-'}</TableCell>
-                      <TableCell>{catalog.width ? `${catalog.width}mm` : '-'}</TableCell>
-                      <TableCell>{formatWeight(catalog.weight || 0)}</TableCell>
+                      <TableCell className="hidden md:table-cell">{catalog.size || '-'}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{catalog.width ? `${catalog.width}mm` : '-'}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{formatWeight(catalog.weight || 0)}</TableCell>
                       <TableCell>
                         {catalogCategory ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700">
@@ -351,7 +353,7 @@ export default function AdminCatalogsPage() {
                           <span className="text-muted-foreground text-sm">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         {catalog.material ? (
                           <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
                             {catalog.material}
@@ -360,7 +362,7 @@ export default function AdminCatalogsPage() {
                           <span className="text-muted-foreground text-sm">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         {catalog.audience ? (
                           <Badge variant="outline" className="bg-purple-50 text-purple-700">
                             {catalog.audience}
@@ -369,7 +371,7 @@ export default function AdminCatalogsPage() {
                           <span className="text-muted-foreground text-sm">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden xl:table-cell">
                         {catalogFonts.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {catalogFonts.slice(0, 2).map((font, index) => (
@@ -389,12 +391,12 @@ export default function AdminCatalogsPage() {
                           <span className="text-muted-foreground text-sm">No font</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Badge variant="secondary">
                           {catalog.images?.length || 0} images
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <Badge variant="outline">
                           {catalog.files?.length || 0} files
                         </Badge>
@@ -402,16 +404,16 @@ export default function AdminCatalogsPage() {
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Link href={`/admin/catalogs/${catalog._id}`}>
-                            <Button variant="outline" size="sm">
-                              <Eye className="w-4 h-4 mr-1" />
-                              View
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 sm:py-2">
+                              <Eye className="h-4 w-4 sm:mr-1.5" />
+                              <span className="hidden sm:inline">View</span>
                             </Button>
                           </Link>
                           
                           <Link href={`/admin/catalogs/edit/${catalog._id}`}>
-                            <Button variant="outline" size="sm">
-                              <Edit className="w-4 h-4 mr-1" />
-                              Edit
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 sm:py-2">
+                              <Edit className="h-4 w-4 sm:mr-1.5" />
+                              <span className="hidden sm:inline">Edit</span>
                             </Button>
                           </Link>
                           
@@ -425,9 +427,9 @@ export default function AdminCatalogsPage() {
                             }
                           }}>
                             <DialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="w-4 h-4 mr-1" />
-                                Delete
+                              <Button variant="destructive" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 sm:py-2">
+                                <Trash2 className="h-4 w-4 sm:mr-1.5" />
+                                <span className="hidden sm:inline">Delete</span>
                               </Button>
                             </DialogTrigger>
                             <DialogContent>
@@ -464,14 +466,15 @@ export default function AdminCatalogsPage() {
                   })}
                 </TableBody>
               </Table>
+              </div>
               
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+                  <div className="text-xs md:text-sm text-muted-foreground order-2 sm:order-1 text-center sm:text-left">
                     Showing {startIndex + 1} to {Math.min(endIndex, filteredCatalogs.length)} of {filteredCatalogs.length} catalogs
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-center gap-2 order-1 sm:order-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -530,6 +533,7 @@ export default function AdminCatalogsPage() {
                       size="sm"
                       onClick={() => setCurrentPage(totalPages)}
                       disabled={currentPage === totalPages}
+                      className="hidden sm:flex"
                     >
                       Last
                     </Button>

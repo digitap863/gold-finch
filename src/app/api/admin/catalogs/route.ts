@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
-import Catalog from "@/models/catalog";
 import { uploadFile } from "@/helpers/fileUpload";
+import Catalog from "@/models/catalog";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -82,13 +82,62 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     await connect();
 
-    const catalogs = await Catalog.find({});
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "0"); // 0 means no limit (fetch all)
+    const search = searchParams.get("search") || "";
+    const category = searchParams.get("category") || "";
 
-    return NextResponse.json(catalogs);
+    // Build query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const query: any = {};
+    
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { style: { $regex: search, $options: "i" } },
+      ];
+    }
+    
+    if (category && category !== "all") {
+      query.category = category;
+    }
+
+    // If no pagination requested (limit = 0), return all catalogs (for admin page compatibility)
+    if (limit === 0) {
+      const catalogs = await Catalog.find(query).sort({ createdAt: -1 });
+      return NextResponse.json(catalogs);
+    }
+
+    // Calculate skip for pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination info
+    const total = await Catalog.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+
+    // Fetch paginated catalogs
+    const catalogs = await Catalog.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    return NextResponse.json({
+      catalogs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    });
   } catch (error) {
     console.error("Error fetching catalogs:", error);
     return NextResponse.json(
@@ -96,4 +145,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-} 
+}

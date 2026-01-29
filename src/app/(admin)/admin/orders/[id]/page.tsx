@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { pdf } from '@react-pdf/renderer';
-import { ArrowLeft, Download, FileText, Package } from "lucide-react";
+import { ArrowLeft, FileText, Package } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -278,25 +278,25 @@ const OrderDetailPage = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => router.push('/admin/orders')}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
+          <Button variant="outline" size="sm" onClick={() => router.push('/admin/orders')} className="order-2 sm:order-1">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Orders
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{order.orderCode}</h1>
-            <p className="text-muted-foreground">{order.productName}</p>
+          <div className="order-1 sm:order-2">
+            <h1 className="text-xl md:text-2xl font-bold">{order.orderCode}</h1>
+            <p className="text-sm md:text-base text-muted-foreground">{order.productName}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Badge className={`${getStatusColor(order.status)}`}>
             {order.status.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
           </Badge>
           <Badge className={`${getPriorityColor(order.priority)}`}>
             {order.priority.toUpperCase()}
           </Badge>
-          <Button onClick={downloadPDF} variant="outline" size="sm">
+          <Button onClick={downloadPDF} variant="outline" size="sm" className="ml-auto sm:ml-0">
             <FileText className="h-4 w-4 mr-2" />
             Download PDF
           </Button>
@@ -312,44 +312,44 @@ const OrderDetailPage = () => {
               <CardTitle>Order Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Customer Name</label>
-                  <p className="text-lg">{order.customerName}</p>
+                  <label className="text-xs sm:text-sm font-medium text-gray-500">Customer Name</label>
+                  <p className="text-base sm:text-lg">{order.customerName}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Product Name</label>
-                  <p className="text-lg">{order.productName}</p>
+                  <label className="text-xs sm:text-sm font-medium text-gray-500">Product Name</label>
+                  <p className="text-base sm:text-lg">{order.productName}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Order Date</label>
-                  <p>{formatDate(order.createdAt)}</p>
+                  <label className="text-xs sm:text-sm font-medium text-gray-500">Order Date</label>
+                  <p className="text-sm sm:text-base">{formatDate(order.createdAt)}</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Salesman</label>
-                  <p>{order.salesmanId?.name || order.salesmanId?.email || '-'}</p>
+                  <label className="text-xs sm:text-sm font-medium text-gray-500">Salesman</label>
+                  <p className="text-sm sm:text-base">{order.salesmanId?.name || order.salesmanId?.email || '-'}</p>
                 </div>
                 {order.salesmanId?.mobile && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Salesman Mobile</label>
-                    <p>{order.salesmanId.mobile}</p>
+                    <label className="text-xs sm:text-sm font-medium text-gray-500">Salesman Mobile</label>
+                    <p className="text-sm sm:text-base">{order.salesmanId.mobile}</p>
                   </div>
                 )}
                 {order.salesmanId?.shopName && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Shop Name</label>
-                    <p>{order.salesmanId.shopName}</p>
+                    <label className="text-xs sm:text-sm font-medium text-gray-500">Shop Name</label>
+                    <p className="text-sm sm:text-base">{order.salesmanId.shopName}</p>
                   </div>
                 )}
                 {order.salesmanId?.shopMobile && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Shop Mobile</label>
-                    <p>{order.salesmanId.shopMobile}</p>
+                    <label className="text-xs sm:text-sm font-medium text-gray-500">Shop Mobile</label>
+                    <p className="text-sm sm:text-base">{order.salesmanId.shopMobile}</p>
                   </div>
                 )}
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Expected Delivery</label>
+                  <label className="text-xs sm:text-sm font-medium text-gray-500">Expected Delivery</label>
                   <input
                     type="date"
                     className="border rounded px-3 py-2 text-sm w-full"
@@ -410,39 +410,39 @@ const OrderDetailPage = () => {
                 <CardDescription>Detailed product specifications and features</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
                   {order.karatage && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Karatage</label>
-                      <p className="text-lg font-medium">{order.karatage}</p>
+                      <label className="text-xs sm:text-sm font-medium text-gray-500">Karatage</label>
+                      <p className="text-base sm:text-lg font-medium">{order.karatage}</p>
                     </div>
                   )}
                   {order.weight && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Weight</label>
-                      <p className="text-lg font-medium">{order.weight}g</p>
+                      <label className="text-xs sm:text-sm font-medium text-gray-500">Weight</label>
+                      <p className="text-base sm:text-lg font-medium">{order.weight}g</p>
                     </div>
                   )}
                   {order.colour && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Colour</label>
-                      <p className="text-lg font-medium">{order.colour}</p>
+                      <label className="text-xs sm:text-sm font-medium text-gray-500">Colour</label>
+                      <p className="text-base sm:text-lg font-medium">{order.colour}</p>
                     </div>
                   )}
                   {order.name && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Name</label>
-                      <p className="text-lg font-medium">{order.name}</p>
+                      <label className="text-xs sm:text-sm font-medium text-gray-500">Name</label>
+                      <p className="text-base sm:text-lg font-medium">{order.name}</p>
                     </div>
                   )}
                   {order.size && (
-                    <div className="md:col-span-2">
-                      <label className="text-sm font-medium text-gray-500">Size</label>
+                    <div className="col-span-2">
+                      <label className="text-xs sm:text-sm font-medium text-gray-500">Size</label>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="capitalize">
+                        <Badge variant="outline" className="capitalize text-[10px] sm:text-xs">
                           {order.size.type}
                         </Badge>
-                        <span className="text-lg font-medium">{order.size.value}</span>
+                        <span className="text-base sm:text-lg font-medium">{order.size.value}</span>
                       </div>
                     </div>
                   )}
@@ -608,12 +608,12 @@ const OrderDetailPage = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-500 block mb-2">Priority</label>
+                <label className="text-xs sm:text-sm font-medium text-gray-500 block mb-2">Priority</label>
                 <Select
                   value={order.priority}
                   onValueChange={(value) => updateOrderField({ priority: value as OrderDetail['priority'] })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

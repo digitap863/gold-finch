@@ -185,10 +185,14 @@ const AdminOrdersPage = () => {
   };
 
   return (
-    <div className="space-y-6 p-5">
-      <div className="mb-6 mt-10">
-        <h1 className="text-2xl md:text-3xl font-bold">Orders</h1>
-        <p className="text-muted-foreground">All orders across salesmen</p>
+    <div className="space-y-6 md:p-10 p-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Orders</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
+            Manage and track all customer orders
+          </p>
+        </div>
       </div>
 
       <div className="mb-6 space-y-4">
@@ -221,23 +225,23 @@ const AdminOrdersPage = () => {
         </div>
 
         {/* Date Filter Row */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-            <label className="text-sm font-medium text-muted-foreground whitespace-nowrap">Order Date:</label>
-            <div className="flex gap-2 items-center">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center bg-muted/30 p-3 sm:p-4 rounded-xl border">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full lg:w-auto">
+            <label className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap uppercase tracking-wider">Filter by Date</label>
+            <div className="flex gap-2 items-center w-full sm:w-auto">
               <Input
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="w-[140px]"
+                className="w-full sm:w-[140px] text-xs sm:text-sm"
                 placeholder="From"
               />
-              <span className="text-muted-foreground">to</span>
+              <span className="text-muted-foreground text-xs font-bold px-1">TO</span>
               <Input
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="w-[140px]"
+                className="w-full sm:w-[140px] text-xs sm:text-sm"
                 placeholder="To"
               />
             </div>
@@ -249,19 +253,19 @@ const AdminOrdersPage = () => {
                   setDateFrom("");
                   setDateTo("");
                 }}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-xs hover:text-destructive shrink-0"
               >
-                Clear dates
+                Clear Dates
               </Button>
             )}
           </div>
 
           {/* Bulk Actions */}
           {selectedIds.length > 0 && (
-            <div className="flex gap-2">
+            <div className="flex items-center gap-3 w-full lg:w-auto lg:ml-auto pt-3 lg:pt-0 border-t lg:border-t-0 border-muted-foreground/10">
               <Select onValueChange={(v) => bulkUpdateStatus(v as AdminOrderItem['status'])}>
-                <SelectTrigger className="w-[220px]">
-                  <SelectValue placeholder={`Bulk update (${selectedIds.length})`} />
+                <SelectTrigger className="w-full sm:w-[220px] bg-primary text-primary-foreground h-9">
+                  <SelectValue placeholder={`Bulk Update (${selectedIds.length})`} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="order_view_and_accepted">Order View & Accepted</SelectItem>
@@ -277,6 +281,7 @@ const AdminOrdersPage = () => {
         </div>
       </div>
 
+      <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
             <TableRow>
@@ -286,14 +291,14 @@ const AdminOrdersPage = () => {
                   onCheckedChange={(c) => toggleAll(Boolean(c))}
                 />
               </TableHead>
-            <TableHead>Order</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Salesman</TableHead>
-            <TableHead>Catalog</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Expected</TableHead>
+            <TableHead className="min-w-[100px]">Order</TableHead>
+            <TableHead className="min-w-[120px]">Customer</TableHead>
+            <TableHead className="min-w-[200px]">Status</TableHead>
+            <TableHead className="min-w-[140px] hidden sm:table-cell">Priority</TableHead>
+            <TableHead className="hidden lg:table-cell">Salesman</TableHead>
+            <TableHead className="hidden xl:table-cell">Catalog</TableHead>
+            <TableHead className="hidden md:table-cell">Created</TableHead>
+            <TableHead className="hidden lg:table-cell">Expected</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -315,8 +320,8 @@ const AdminOrdersPage = () => {
                     onCheckedChange={(c) => toggleOne(o._id, Boolean(c))}
                   />
                 </TableCell>
-                <TableCell className="font-medium">{o.orderCode}</TableCell>
-                <TableCell>{o.customerName}</TableCell>
+                <TableCell className="font-medium text-xs sm:text-sm">{o.orderCode}</TableCell>
+                <TableCell className="text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">{o.customerName}</TableCell>
                 <TableCell>
                   <Select
                     value={o.status}
@@ -328,26 +333,26 @@ const AdminOrdersPage = () => {
                       }
                     }}
                   >
-                    <SelectTrigger className="w-[220px]">
+                    <SelectTrigger className="w-full sm:w-[200px] h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="confirmed">Confirmed</SelectItem>
-                <SelectItem value="order_view_and_accepted">Order View & Accepted</SelectItem>
-                <SelectItem value="cad_completed">CAD Completed</SelectItem>
-                <SelectItem value="production_floor">Production Floor</SelectItem>
-                <SelectItem value="finished">Finished</SelectItem>
-                <SelectItem value="dispatched">Dispatched</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
+                    <SelectContent>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="order_view_and_accepted">Order View & Accepted</SelectItem>
+                      <SelectItem value="cad_completed">CAD Completed</SelectItem>
+                      <SelectItem value="production_floor">Production Floor</SelectItem>
+                      <SelectItem value="finished">Finished</SelectItem>
+                      <SelectItem value="dispatched">Dispatched</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
                   </Select>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Select
                     value={o.priority}
                     onValueChange={(value) => updateOrderField(o._id, { priority: value as AdminOrderItem['priority'] })}
                   >
-                    <SelectTrigger className="w-[140px]">
+                    <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -358,21 +363,21 @@ const AdminOrdersPage = () => {
                     </SelectContent>
                   </Select>
                 </TableCell>
-                <TableCell>{o.salesmanId?.name || o.salesmanId?.email || o.salesmanId?.mobile || '-'}</TableCell>
-                <TableCell>{o.catalogId?.title || '-'}</TableCell>
-                <TableCell>{formatDate(o.createdAt)}</TableCell>
-                <TableCell>
+                <TableCell className="hidden lg:table-cell text-xs sm:text-sm">{o.salesmanId?.name || o.salesmanId?.email || o.salesmanId?.mobile || '-'}</TableCell>
+                <TableCell className="hidden xl:table-cell text-xs sm:text-sm">{o.catalogId?.title || '-'}</TableCell>
+                <TableCell className="hidden md:table-cell text-xs sm:text-sm">{formatDate(o.createdAt)}</TableCell>
+                <TableCell className="hidden lg:table-cell">
                   <input
                     type="date"
-                    className="border rounded px-2 py-1 text-sm"
+                    className="border rounded px-2 py-1 text-xs"
                     value={o.expectedDeliveryDate ? new Date(o.expectedDeliveryDate).toISOString().slice(0,10) : ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateOrderField(o._id, { expectedDeliveryDate: e.target.value })}
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="outline" size="sm" onClick={() => navigateToOrder(o.orderCode)}>
-                    <Eye className="h-4 w-4 mr-2" />
-                    View
+                  <Button variant="outline" size="sm" onClick={() => navigateToOrder(o.orderCode)} className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 sm:py-2">
+                    <Eye className="h-4 w-4 sm:mr-1.5" />
+                    <span className="hidden sm:inline">View</span>
                   </Button>
                 </TableCell>
               </TableRow>
@@ -380,6 +385,7 @@ const AdminOrdersPage = () => {
           )}
         </TableBody>
       </Table>
+      </div>
 
       {/* Cancel Order Modal */}
       <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>

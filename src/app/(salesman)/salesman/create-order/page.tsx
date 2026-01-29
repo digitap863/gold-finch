@@ -265,7 +265,7 @@ function CreateOrderContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6 mt-10">
+      <div className="mb-6 md:mt-10 mt-16">
         <h1 className="text-2xl md:text-3xl font-bold">Create New Order</h1>
         <p className="text-muted-foreground">Submit a new order request</p>
       </div>

@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { toast } from "sonner";
-import { Plus, Upload, X, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FileText, Plus, Upload, X } from "lucide-react";
+import React, { useState } from 'react';
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
 
 // Font form schema
 const fontFormSchema = z.object({
@@ -82,10 +82,14 @@ const FontPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Add New Font</h1>
-        <p className="text-muted-foreground">Upload font files and create a new font entry</p>
+    <div className="space-y-6 md:p-10 p-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Add New Font</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
+            Upload font files and create a new font entry
+          </p>
+        </div>
       </div>
 
       <Card className="max-w-2xl">
@@ -145,15 +149,15 @@ const FontPage = () => {
                 {selectedFiles.length > 0 && (
                   <div className="space-y-3">
                     <div className="text-sm font-medium">Selected Files ({selectedFiles.length})</div>
-                    <div className="grid gap-3">
+                    <div className="grid gap-2">
                       {selectedFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                          <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5 text-blue-500" />
-                            <div>
-                              <div className="font-medium text-sm">{file.name}</div>
-                              <div className="text-xs text-gray-500">
-                                {(file.size / 1024).toFixed(1)} KB • {file.type || 'Unknown type'}
+                        <div key={index} className="flex items-center justify-between p-2.5 sm:p-3 bg-muted/50 rounded-lg border group">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 shrink-0" />
+                            <div className="overflow-hidden">
+                              <div className="font-medium text-xs sm:text-sm truncate">{file.name}</div>
+                              <div className="text-[10px] sm:text-xs text-muted-foreground">
+                                {(file.size / 1024).toFixed(1)} KB • {file.type || 'Font file'}
                               </div>
                             </div>
                           </div>
@@ -162,7 +166,7 @@ const FontPage = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => removeFile(index)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0 h-8 w-8 p-0"
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -173,8 +177,8 @@ const FontPage = () => {
                 )}
               </div>
 
-              <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2">
+               <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <Button type="submit" disabled={isSubmitting} className="flex items-center gap-2 w-full sm:w-auto">
                   <Plus className="h-4 w-4" />
                   {isSubmitting ? "Creating..." : "Create Font"}
                 </Button>
@@ -185,6 +189,7 @@ const FontPage = () => {
                     form.reset();
                     setSelectedFiles([]);
                   }}
+                  className="w-full sm:w-auto"
                 >
                   Reset Form
                 </Button>
