@@ -199,7 +199,7 @@ export default function LoginPage() {
       </div>
 
       {/* Contact Information */}
-      <div className="mt-8 text-center w-full max-w-md px-4 absolute md:bottom-4 bottom-0 right-0create new ">
+      <div className="mt-8 text-center w-full max-w-md px-4 absolute md:bottom-4 bottom-0 md:right-0 right-2 create new ">
         <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm  shadow-lg border border-border/50">
           <p className="text-sm mb-2 font-medium text-gray-800">Contact Us</p>
           <div className="space-y-1">
