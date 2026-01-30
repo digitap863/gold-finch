@@ -459,9 +459,33 @@ const OrderPDF: React.FC<OrderPDFProps> = ({ order }) => {
           </View>
         )}
 
+        {/* Footer for first page */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            Generated on {new Date().toLocaleDateString()} • Order ID: {order.orderCode}
+          </Text>
+        </View>
+      </Page>
+
+      {/* Second Page - Production Tracking */}
+      <Page size="A4" style={styles.page}>
+        {/* Header for Production Tracking Page */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Production Tracking</Text>
+          <Text style={styles.subtitle}>{order.orderCode}</Text>
+          <View style={styles.row}>
+            <Text style={styles.label}>Product:</Text>
+            <Text style={styles.value}>{order.productName}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Customer:</Text>
+            <Text style={styles.value}>{order.customerName}</Text>
+          </View>
+        </View>
+
         {/* Production Tracking Table */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Production Tracking</Text>
+          <Text style={styles.sectionTitle}>Production Workflow</Text>
           
           <View style={styles.table}>
             {/* Header Row 1: blank | Worker Name (spans 2 cols) | blank */}
@@ -550,15 +574,16 @@ const OrderPDF: React.FC<OrderPDFProps> = ({ order }) => {
           </View>
         </View>
 
-        {/* Footer */}
+        {/* Footer for second page */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Generated on {new Date().toLocaleDateString()} • Order ID: {order.orderCode}
+            Generated on {new Date().toLocaleDateString()} • Order ID: {order.orderCode} • Page 2
           </Text>
         </View>
       </Page>
     </Document>
   );
 };
+
 
 export default OrderPDF;
