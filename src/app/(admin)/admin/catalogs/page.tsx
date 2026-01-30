@@ -218,7 +218,7 @@ export default function AdminCatalogsPage() {
               <div className="relative flex-1 w-full sm:max-w-sm">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search catalogs..."
+                  placeholder="Search catalogs by model ..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8 w-full"

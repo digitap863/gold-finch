@@ -75,7 +75,7 @@ const CatalogsPage = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
-    }, 300);
+    }, 1000);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
@@ -200,7 +200,7 @@ const CatalogsPage = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search catalogs..."
+            placeholder="Search catalogs by model ..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -282,7 +282,7 @@ const CatalogsPage = () => {
                     {/* Catalog Details */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Style:</span>
+                        <span className="text-gray-500">Model:</span>
                         <span className="font-medium text-gray-900">{catalog.style}</span>
                       </div>
                       {catalog.audience && (

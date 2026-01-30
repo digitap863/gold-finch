@@ -97,12 +97,13 @@ export async function GET(req: NextRequest) {
     const query: any = {};
     
     if (search) {
+      // Primary search by style (model), then fallback to title
       query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
         { style: { $regex: search, $options: "i" } },
+        { title: { $regex: search, $options: "i" } },
       ];
     }
+
     
     if (category && category !== "all") {
       query.category = category;
@@ -110,7 +111,7 @@ export async function GET(req: NextRequest) {
 
     // If no pagination requested (limit = 0), return all catalogs (for admin page compatibility)
     if (limit === 0) {
-      const catalogs = await Catalog.find(query).sort({ createdAt: -1 });
+      const catalogs = await Catalog.find(query).sort({ createdAt: 1 });
       return NextResponse.json(catalogs);
     }
 
@@ -123,7 +124,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch paginated catalogs
     const catalogs = await Catalog.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: 1 })
       .skip(skip)
       .limit(limit);
 
