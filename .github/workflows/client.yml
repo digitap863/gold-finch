@@ -194,6 +194,8 @@ jobs:
         SMS_GATEWAY_TEMPLATE_ID_LOGIN: ${{ secrets.SMS_GATEWAY_TEMPLATE_ID_LOGIN }}
         SMS_GATEWAY_TEMPLATE_ID_PASSWORD: ${{ secrets.SMS_GATEWAY_TEMPLATE_ID_PASSWORD }}
         SMS_GATEWAY_API_URL: ${{ secrets.SMS_GATEWAY_API_URL }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: npm run build
 
     - name: Remove dev dependencies
@@ -242,6 +244,8 @@ jobs:
           SMS_GATEWAY_TEMPLATE_ID_LOGIN=${{ secrets.SMS_GATEWAY_TEMPLATE_ID_LOGIN }}
           SMS_GATEWAY_TEMPLATE_ID_PASSWORD=${{ secrets.SMS_GATEWAY_TEMPLATE_ID_PASSWORD }}
           SMS_GATEWAY_API_URL=${{ secrets.SMS_GATEWAY_API_URL }}
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
           EOF
           
           pm2 delete gold-finch 2>/dev/null || true

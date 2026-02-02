@@ -23,6 +23,7 @@ const orderSchema = new mongoose.Schema({
   enamel: { type: Boolean, default: false },
   matte: { type: Boolean, default: false },
   rodium: { type: Boolean, default: false },
+  additional_feature_color: { type: String, required: false }, // Color for Stone, Enamel, or Rodium
   
   status: { 
     type: String, 

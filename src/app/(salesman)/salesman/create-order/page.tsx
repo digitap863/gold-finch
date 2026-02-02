@@ -1,13 +1,13 @@
 "use client";
-import React, { useRef, useState, useEffect, Suspense } from "react";
-import Image from "next/image";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mic, X, Upload, Plus, Square, Play, Trash2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Mic, Play, Plus, Square, Trash2, Upload, X } from "lucide-react";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface CatalogDetail {
@@ -46,6 +46,7 @@ function CreateOrderContent() {
   const [enamel, setEnamel] = useState<boolean>(false);
   const [matte, setMatte] = useState<boolean>(false);
   const [rodium, setRodium] = useState<boolean>(false);
+  const [additionalFeatureColor, setAdditionalFeatureColor] = useState<string>("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -188,6 +189,7 @@ function CreateOrderContent() {
       formData.append("enamel", enamel.toString());
       formData.append("matte", matte.toString());
       formData.append("rodium", rodium.toString());
+      formData.append("additional_feature_color", additionalFeatureColor);
 
       if (catalogId) {
         formData.append("catalogId", catalogId);
@@ -586,6 +588,23 @@ function CreateOrderContent() {
                     <span className="text-sm">Rodium</span>
                   </label>
                 </div>
+                
+                {/* Show color input when Stone, Enamel, or Rodium is selected */}
+                {(stone || enamel || rodium) && (
+                  <div className="mt-4">
+                    <Label htmlFor="additionalFeatureColor">Feature Color</Label>
+                    <Input
+                      id="additionalFeatureColor"
+                      placeholder="Enter color "
+                      value={additionalFeatureColor}
+                      onChange={(e) => setAdditionalFeatureColor(e.target.value)}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Specify the color for: {[stone && 'Stone', enamel && 'Enamel', rodium && 'Rodium'].filter(Boolean).join(', ')}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -39,6 +39,7 @@ interface OrderDetail {
   enamel?: boolean;
   matte?: boolean;
   rodium?: boolean;
+  additional_feature_color?: string;
   
   catalogId?: {
     _id: string;
@@ -318,8 +319,8 @@ const OrderDetailPage = () => {
                   <p className="text-base sm:text-lg">{order.customerName}</p>
                 </div>
                 <div>
-                  <label className="text-xs sm:text-sm font-medium text-gray-500">Product Name</label>
-                  <p className="text-base sm:text-lg">{order.productName}</p>
+                  <label className="text-xs sm:text-sm font-medium text-gray-500">Product Model</label>
+                  <p className="text-base sm:text-lg">{order?.catalogId?.style}</p>
                 </div>
                 <div>
                   <label className="text-xs sm:text-sm font-medium text-gray-500">Order Date</label>
@@ -471,6 +472,11 @@ const OrderDetailPage = () => {
                       {order.rodium && (
                         <Badge variant="secondary" className="bg-purple-100 text-purple-700">
                           Rodium
+                        </Badge>
+                      )}
+                      {order.additional_feature_color && (
+                        <Badge variant="secondary" className="bg-pink-100 text-pink-700">
+                          Color: {order.additional_feature_color}
                         </Badge>
                       )}
                     </div>

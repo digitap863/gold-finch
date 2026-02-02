@@ -1,9 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
-import Order from "@/models/order";
-import Counter from "@/models/Counter";
 import { uploadFile } from "@/helpers/fileUpload";
+import { sendNewOrderNotification } from "@/lib/telegram";
+import Catalog from "@/models/catalog";
+import Counter from "@/models/Counter";
+import Order from "@/models/order";
 import jwt from "jsonwebtoken";
+import { NextRequest, NextResponse } from "next/server";
+
+// Ensure Catalog model is registered for populate
+void Catalog;
 
 // Helper function to verify JWT token
 const verifyToken = (req: NextRequest) => {
@@ -61,6 +66,10 @@ export async function POST(req: NextRequest) {
     const enamel = formData.get("enamel") === "true";
     const matte = formData.get("matte") === "true";
     const rodium = formData.get("rodium") === "true";
+    const additional_feature_color = (formData.get("additional_feature_color") as string)?.trim() || "";
+    
+    // Debug logging
+    console.log("additional_feature_color received:", additional_feature_color);
 
     // Validation
     if (!productName || !customerName) {
@@ -137,10 +146,16 @@ export async function POST(req: NextRequest) {
       stone,
       enamel,
       matte,
-      rodium
+      rodium,
+      ...(additional_feature_color.length > 0 ? { additional_feature_color } : {})
     });
 
     await order.save();
+
+    // Send Telegram notification for new order (async, don't wait)
+    sendNewOrderNotification(orderCode, productName, customerName).catch(err => {
+      console.error('Failed to send Telegram notification:', err);
+    });
 
     return NextResponse.json({
       message: "Order created successfully",
