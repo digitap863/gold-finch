@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 // Ensure models are registered
 import "@/models/catagory";
 import "@/models/catalog";
+import "@/models/font";
 import "@/models/user";
 
 export async function GET(
