@@ -147,8 +147,19 @@ function CreateOrderContent() {
     }
   };
 
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    
+    // Validate file sizes
+    const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE);
+    if (oversizedFiles.length > 0) {
+      toast.error(`Some files exceed the 20MB limit: ${oversizedFiles.map(f => f.name).join(', ')}`);
+      e.target.value = ''; // Reset the input
+      return;
+    }
+    
     setImages((prev) => [...prev, ...files]);
     setPreviews((prev) => [
       ...prev,
@@ -166,6 +177,19 @@ function CreateOrderContent() {
 
     if (!productName.trim() || !customerName.trim()) {
       toast.error("Product name and customer name are required");
+      return;
+    }
+
+    // Validate file sizes before submission
+    for (const image of images) {
+      if (image.size > MAX_FILE_SIZE) {
+        toast.error(`Image "${image.name}" exceeds 20MB limit. Please remove it or use a smaller file.`);
+        return;
+      }
+    }
+    
+    if (audioBlob && audioBlob.size > MAX_FILE_SIZE) {
+      toast.error("Voice recording exceeds 20MB limit. Please record a shorter message.");
       return;
     }
 
@@ -221,12 +245,22 @@ function CreateOrderContent() {
         body: formData,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create order");
+      // Check content type to handle non-JSON responses
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        // Server returned HTML error page (likely file too large or server error)
+        if (response.status === 413) {
+          throw new Error("File too large. Please reduce the size of your images or voice recording.");
+        }
+        throw new Error("Server error. Please try again or contact support if the issue persists.");
       }
 
-      await response.json();
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create order");
+      }
+
       toast.success("Order created successfully!");
 
       // Reset form
@@ -290,10 +324,10 @@ function CreateOrderContent() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="customer">Customer Name</Label>
+                <Label htmlFor="customer">Salesman Name</Label>
                 <Input
                   id="customer"
-                  placeholder="Customer name"
+                  placeholder="Salesman name"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   required

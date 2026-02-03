@@ -31,9 +31,9 @@ export const uploadFile = async (file: File): Promise<string> => {
       throw new Error('No file provided');
     }
 
-    // Check file size (max 10MB for Cloudinary free tier)
-    if (file.size > 10 * 1024 * 1024) {
-      throw new Error('File size exceeds 10MB limit. Please use a smaller file or upgrade your Cloudinary plan.');
+    // Check file size (max 20MB)
+    if (file.size > 20 * 1024 * 1024) {
+      throw new Error('File size exceeds 20MB limit. Please use a smaller file.');
     }
 
     // Check if file is an image or audio
@@ -109,7 +109,7 @@ export const uploadFile = async (file: File): Promise<string> => {
       if (error.message.includes('timeout')) {
         throw new Error('Upload timed out. Please try again with a smaller file or check your internet connection.');
       } else if (error.message.includes('size')) {
-        throw new Error('File is too large. Please use a file smaller than 10MB.');
+        throw new Error('File is too large. Please use a file smaller than 20MB.');
       } else {
         throw error;
       }
