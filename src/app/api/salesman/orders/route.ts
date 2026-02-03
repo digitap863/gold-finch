@@ -203,7 +203,7 @@ export async function GET(req: NextRequest) {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("catalogId", "title images");
+      .populate("catalogId", "title style images");
 
     // Get total count
     const total = await Order.countDocuments(query);
