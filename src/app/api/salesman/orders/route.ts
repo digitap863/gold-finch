@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
     
     const productName = formData.get("productName") as string;
     const customerName = formData.get("customerName") as string;
+    const salesmanPhone = formData.get("salesmanPhone") as string;
     const customizationDetails = formData.get("customizationDetails") as string;
     const expectedDeliveryDate = formData.get("expectedDeliveryDate") as string;
     const catalogId = formData.get("catalogId") as string;
@@ -130,6 +131,7 @@ export async function POST(req: NextRequest) {
       orderCode,
       productName,
       customerName,
+      salesmanPhone: salesmanPhone || undefined,
       customizationDetails,
       voiceRecording: voiceRecordingUrl || undefined,
       images: imageUrls.length > 0 ? imageUrls : undefined,

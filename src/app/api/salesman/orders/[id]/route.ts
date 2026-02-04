@@ -132,7 +132,8 @@ export async function PUT(
     // Only allow updating certain fields
     const allowedUpdates = [
       'productName', 
-      'customerName', 
+      'customerName',
+      'salesmanPhone',
       'customizationDetails', 
       'expectedDeliveryDate',
       'karatage',

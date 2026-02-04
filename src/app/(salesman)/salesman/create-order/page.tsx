@@ -26,6 +26,7 @@ function CreateOrderContent() {
   const [previews, setPreviews] = useState<string[]>([]);
   const [productName, setProductName] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");
+  const [salesmanPhone, setSalesmanPhone] = useState<string>("");
   const [customizationDetails, setCustomizationDetails] = useState<string>("");
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState<string>("");
   const [isRecording, setIsRecording] = useState(false);
@@ -199,6 +200,7 @@ function CreateOrderContent() {
       const formData = new FormData();
       formData.append("productName", productName);
       formData.append("customerName", customerName);
+      formData.append("salesmanPhone", salesmanPhone);
       formData.append("customizationDetails", customizationDetails);
       formData.append("expectedDeliveryDate", expectedDeliveryDate);
 
@@ -331,6 +333,16 @@ function CreateOrderContent() {
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="salesmanPhone">Salesman Phone</Label>
+                <Input
+                  id="salesmanPhone"
+                  placeholder="e.g., 9876543210"
+                  value={salesmanPhone}
+                  onChange={(e) => setSalesmanPhone(e.target.value)}
+                  type="tel"
                 />
               </div>
             </div>

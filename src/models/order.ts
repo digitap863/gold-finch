@@ -4,6 +4,7 @@ const orderSchema = new mongoose.Schema({
   orderCode: { type: String, required: true, unique: true },
   productName: { type: String, required: true },
   customerName: { type: String, required: true },
+  salesmanPhone: { type: String, required: false },
   customizationDetails: { type: String, required: false },
   voiceRecording: { type: String, required: false }, // URL to audio file
   images: { type: [String], required: false }, // Array of image URLs

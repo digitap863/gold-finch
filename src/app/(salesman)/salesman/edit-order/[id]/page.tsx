@@ -16,6 +16,7 @@ interface OrderDetail {
   orderCode: string;
   productName: string;
   customerName: string;
+  salesmanPhone?: string;
   customizationDetails?: string;
   voiceRecording?: string;
   images?: string[];
@@ -55,6 +56,7 @@ export default function EditOrderPage() {
   // Form states
   const [productName, setProductName] = useState("");
   const [customerName, setCustomerName] = useState("");
+  const [salesmanPhone, setSalesmanPhone] = useState("");
   const [customizationDetails, setCustomizationDetails] = useState("");
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
   const [karatage, setKaratage] = useState("");
@@ -120,6 +122,7 @@ export default function EditOrderPage() {
       // Populate form fields
       setProductName(data.productName || "");
       setCustomerName(data.customerName || "");
+      setSalesmanPhone(data.salesmanPhone || "");
       setCustomizationDetails(data.customizationDetails || "");
       setExpectedDeliveryDate(data.expectedDeliveryDate ? new Date(data.expectedDeliveryDate).toISOString().split('T')[0] : "");
       setKaratage(data.karatage || "");
@@ -175,6 +178,7 @@ export default function EditOrderPage() {
       const updateData = {
         productName,
         customerName,
+        salesmanPhone: salesmanPhone || undefined,
         customizationDetails,
         expectedDeliveryDate: expectedDeliveryDate || undefined,
         karatage: karatage || undefined,
@@ -310,6 +314,17 @@ export default function EditOrderPage() {
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   required
+                  disabled={!canEdit}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="salesmanPhone">Salesman Phone</Label>
+                <Input
+                  id="salesmanPhone"
+                  placeholder="e.g., 9876543210"
+                  value={salesmanPhone}
+                  onChange={(e) => setSalesmanPhone(e.target.value)}
+                  type="tel"
                   disabled={!canEdit}
                 />
               </div>
