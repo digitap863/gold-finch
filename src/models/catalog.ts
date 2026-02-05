@@ -4,6 +4,7 @@ const catalogSchema = new mongoose.Schema({
   title: { type: String, required: true },
   style: { type: String, required: true },
   width: { type: Number },
+  length: { type: Number },
   category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: false },
   material: { type: String, required: true, enum: ["Gold", "Diamond"] },
   audience: { type: String, required: true, enum: ['Men', 'Women', 'Kids', 'All'] },

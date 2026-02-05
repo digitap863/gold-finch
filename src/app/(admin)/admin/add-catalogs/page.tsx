@@ -23,6 +23,7 @@ const catalogFormSchema = z.object({
   style: z.string().min(1, "Style is required"),
   size: z.string().optional(),
   width: z.string().optional(),
+  length: z.string().optional(),
   weight: z.string().optional(),
   category: z.string().optional(),
   material: z.enum(["Gold", "Diamond"]),
@@ -119,6 +120,7 @@ const CatalogPage = () => {
       style: "",
       size: "",
       width: "",
+      length: "",
       weight: "",
       category: "",
       material: undefined,
@@ -159,6 +161,7 @@ const CatalogPage = () => {
       if (data.size) formData.append("size", data.size);
       if (data.weight) formData.append("weight", data.weight);
       if (data.width && data.width.length > 0) formData.append("width", data.width);
+      if (data.length && data.length.length > 0) formData.append("length", data.length);
       if (data.category) formData.append("category", data.category);
       if (data.material) formData.append("material", data.material);
       if (data.audience) formData.append("audience", data.audience);
@@ -265,6 +268,44 @@ const CatalogPage = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Weight (grams)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0" 
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="width"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Width (mm)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0" 
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="length"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Length (mm)</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 

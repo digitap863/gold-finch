@@ -55,13 +55,16 @@ export async function PUT(
     const style = formData.get("style") as string;
     const size = formData.get("size") as string;
     const weight = parseFloat(formData.get("weight") as string);
+    const width = formData.get("width") as string;
+    const length = formData.get("length") as string;
+    const category = formData.get("category") as string;
     const font = formData.get("font") as string;
     const description = formData.get("description") as string;
     
     // Validation
-    if (!title || !style || !size || !weight || !font) {
+    if (!title || !style) {
       return NextResponse.json(
-        { error: "All fields except description are required" },
+        { error: "Title and style are required" },
         { status: 400 }
       );
     }
@@ -122,7 +125,10 @@ export async function PUT(
         title,
         style,
         size,
-        weight,
+        weight: weight || undefined,
+        width: width ? parseFloat(width) : undefined,
+        length: length ? parseFloat(length) : undefined,
+        category: category || undefined,
         font: font || undefined,
         fonts: font ? [font] : undefined,
         description,

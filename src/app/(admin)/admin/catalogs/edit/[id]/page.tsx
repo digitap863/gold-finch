@@ -20,9 +20,12 @@ import { z } from "zod";
 const catalogFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   style: z.string().min(1, "Style is required"),
-  size: z.string().min(1, "Size is required"),
+  size: z.string().optional(),
+  width: z.string().optional(),
+  length: z.string().optional(),
   weight: z.string().min(1, "Weight is required"),
-  font: z.string().min(1, "Font is required"),
+  category: z.string().optional(),
+  font: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -33,7 +36,10 @@ interface Catalog {
   title: string;
   style: string;
   size: string;
+  width?: number;
+  length?: number;
   weight: number;
+  category?: string | { _id: string; name: string };
   font: string | string[] | { _id: string; name: string }; // Can be string, array, or object
   fonts?: string[] | { _id: string; name: string }[]; // Add plural fonts field
   description: string;
@@ -49,6 +55,11 @@ interface Font {
   files: string[];
 }
 
+interface Category {
+  _id: string;
+  name: string;
+}
+
 export default function EditCatalogPage() {
   const params = useParams();
   const id = (params as Record<string, string>).id;
@@ -59,6 +70,7 @@ export default function EditCatalogPage() {
   const [removedImages, setRemovedImages] = useState<string[]>([]);
   const [removedFiles, setRemovedFiles] = useState<string[]>([]);
   const [fonts, setFonts] = useState<Font[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -68,7 +80,10 @@ export default function EditCatalogPage() {
       title: "",
       style: "",
       size: "",
+      width: "",
+      length: "",
       weight: "",
+      category: "",
       font: "",
       description: "",
     },
@@ -86,6 +101,20 @@ export default function EditCatalogPage() {
       }
     };
     fetchFonts();
+  }, []);
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('/api/admin/categories');
+        const data = await res.json();
+        setCategories(data.categories || []);
+      } catch {
+        setCategories([]);
+      }
+    };
+    fetchCategories();
   }, []);
 
   // Fetch catalog data
@@ -128,11 +157,24 @@ export default function EditCatalogPage() {
       console.log('Catalog fonts:', catalog.fonts); // Debug log
 
       console.log('Catalog font:', catalog.font); // Debug log --- comming as undeined 
+      // Handle category - it can be a string ID or an object with _id
+      let categoryValue = '';
+      if (catalog.category) {
+        if (typeof catalog.category === 'object' && catalog.category !== null) {
+          categoryValue = (catalog.category as { _id: string })._id || '';
+        } else if (typeof catalog.category === 'string') {
+          categoryValue = catalog.category;
+        }
+      }
+
       form.reset({
         title: catalog.title,
         style: catalog.style,
-        size: catalog.size,
-        weight: catalog.weight.toString(),
+        size: catalog.size || "",
+        width: catalog.width?.toString() || "",
+        length: catalog.length?.toString() || "",
+        weight: catalog.weight?.toString() || "",
+        category: categoryValue,
         font: fontValue,
         description: catalog.description || "",
       });
@@ -175,9 +217,12 @@ export default function EditCatalogPage() {
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("style", data.style);
-      formData.append("size", data.size);
+      if (data.size) formData.append("size", data.size);
+      if (data.width) formData.append("width", data.width);
+      if (data.length) formData.append("length", data.length);
       formData.append("weight", data.weight);
-      formData.append("font", data.font);
+      if (data.category) formData.append("category", data.category);
+      if (data.font) formData.append("font", data.font);
       formData.append("description", data.description || "");
 
       console.log("formData", formData);
@@ -321,7 +366,7 @@ export default function EditCatalogPage() {
                 name="size"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Size *</FormLabel>
+                    <FormLabel>Size</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter size" {...field} />
                     </FormControl>
@@ -351,11 +396,74 @@ export default function EditCatalogPage() {
 
               <FormField
                 control={form.control}
+                name="width"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Width (mm)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="length"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Length (mm)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category._id} value={category._id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="font"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Font *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <FormLabel>Font</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a font" />
