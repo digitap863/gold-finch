@@ -26,6 +26,7 @@ const catalogFormSchema = z.object({
   weight: z.string().min(1, "Weight is required"),
   category: z.string().optional(),
   audience: z.string().optional(),
+  material: z.string().optional(),
   font: z.string().optional(),
   description: z.string().optional(),
 });
@@ -42,6 +43,7 @@ interface Catalog {
   weight: number;
   category?: string | { _id: string; name: string };
   audience?: string;
+  material?: string;
   font: string | string[] | { _id: string; name: string }; // Can be string, array, or object
   fonts?: string[] | { _id: string; name: string }[]; // Add plural fonts field
   description: string;
@@ -87,6 +89,7 @@ export default function EditCatalogPage() {
       weight: "",
       category: "",
       audience: "",
+      material: "",
       font: "",
       description: "",
     },
@@ -179,6 +182,7 @@ export default function EditCatalogPage() {
         weight: catalog.weight?.toString() || "",
         category: categoryValue,
         audience: catalog.audience || "",
+        material: catalog.material || "",
         font: fontValue,
         description: catalog.description || "",
       });
@@ -227,6 +231,7 @@ export default function EditCatalogPage() {
       formData.append("weight", data.weight);
       if (data.category) formData.append("category", data.category);
       if (data.audience) formData.append("audience", data.audience);
+      if (data.material) formData.append("material", data.material);
       if (data.font) formData.append("font", data.font);
       formData.append("description", data.description || "");
 
@@ -479,6 +484,28 @@ export default function EditCatalogPage() {
                         <SelectItem value="Men">Men</SelectItem>
                         <SelectItem value="Women">Women</SelectItem>
                         <SelectItem value="Kids">Kids</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="material"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Material</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select material" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Gold">Gold</SelectItem>
+                        <SelectItem value="Diamond">Diamond</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
