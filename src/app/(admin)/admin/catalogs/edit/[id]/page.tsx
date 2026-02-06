@@ -25,6 +25,7 @@ const catalogFormSchema = z.object({
   length: z.string().optional(),
   weight: z.string().min(1, "Weight is required"),
   category: z.string().optional(),
+  audience: z.string().optional(),
   font: z.string().optional(),
   description: z.string().optional(),
 });
@@ -40,6 +41,7 @@ interface Catalog {
   length?: number;
   weight: number;
   category?: string | { _id: string; name: string };
+  audience?: string;
   font: string | string[] | { _id: string; name: string }; // Can be string, array, or object
   fonts?: string[] | { _id: string; name: string }[]; // Add plural fonts field
   description: string;
@@ -84,6 +86,7 @@ export default function EditCatalogPage() {
       length: "",
       weight: "",
       category: "",
+      audience: "",
       font: "",
       description: "",
     },
@@ -175,6 +178,7 @@ export default function EditCatalogPage() {
         length: catalog.length?.toString() || "",
         weight: catalog.weight?.toString() || "",
         category: categoryValue,
+        audience: catalog.audience || "",
         font: fontValue,
         description: catalog.description || "",
       });
@@ -222,6 +226,7 @@ export default function EditCatalogPage() {
       if (data.length) formData.append("length", data.length);
       formData.append("weight", data.weight);
       if (data.category) formData.append("category", data.category);
+      if (data.audience) formData.append("audience", data.audience);
       if (data.font) formData.append("font", data.font);
       formData.append("description", data.description || "");
 
@@ -450,6 +455,30 @@ export default function EditCatalogPage() {
                             {category.name}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="audience"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Audience</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select audience" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="All">All</SelectItem>
+                        <SelectItem value="Men">Men</SelectItem>
+                        <SelectItem value="Women">Women</SelectItem>
+                        <SelectItem value="Kids">Kids</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

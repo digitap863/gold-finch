@@ -58,6 +58,7 @@ export async function PUT(
     const width = formData.get("width") as string;
     const length = formData.get("length") as string;
     const category = formData.get("category") as string;
+    const audience = formData.get("audience") as string;
     const font = formData.get("font") as string;
     const description = formData.get("description") as string;
     
@@ -129,6 +130,7 @@ export async function PUT(
         width: width ? parseFloat(width) : undefined,
         length: length ? parseFloat(length) : undefined,
         category: category || undefined,
+        audience: audience || undefined,
         font: font || undefined,
         fonts: font ? [font] : undefined,
         description,

@@ -18,6 +18,7 @@ interface Catalog {
   style: string;
   size?: string;
   width?: number;
+  length?: number;
   weight?: number;
   description?: string;
   images: string[];
@@ -164,7 +165,11 @@ export default function CatalogDetailPage() {
             </div>
             <div>
               <span className="font-medium text-muted-foreground">Width:</span>
-              <p className="text-lg">{catalog.width ? `${catalog.width}mm` : 'Not specified'}</p>
+              <p className="text-lg">{catalog.width ? `${catalog.width} mm` : 'Not specified'}</p>
+            </div>
+            <div>
+              <span className="font-medium text-muted-foreground">Length:</span>
+              <p className="text-lg">{catalog.length ? `${catalog.length} mm` : 'Not specified'}</p>
             </div>
             <div>
               <span className="font-medium text-muted-foreground">Weight:</span>
