@@ -19,6 +19,7 @@ interface Catalog {
   style: string;
   size?: string;
   width?: number;
+  length?: number;
   weight?: number;
   description?: string;
   images: string[];
@@ -318,6 +319,7 @@ export default function AdminCatalogsPage() {
                     <TableHead>Style</TableHead>
                     <TableHead className="hidden md:table-cell">Size</TableHead>
                     <TableHead className="hidden lg:table-cell">Width</TableHead>
+                    <TableHead className="hidden lg:table-cell">Length</TableHead>
                     <TableHead className="hidden lg:table-cell">Weight</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead className="hidden sm:table-cell">Material</TableHead>
@@ -342,7 +344,8 @@ export default function AdminCatalogsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">{catalog.size || '-'}</TableCell>
-                      <TableCell className="hidden lg:table-cell">{catalog.width ? `${catalog.width}mm` : '-'}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{catalog.width ? `${catalog.width} mm` : '-'}</TableCell>
+                      <TableCell className="hidden lg:table-cell">{catalog.length ? `${catalog.length} mm` : '-'}</TableCell>
                       <TableCell className="hidden lg:table-cell">{formatWeight(catalog.weight || 0)}</TableCell>
                       <TableCell>
                         {catalogCategory ? (
