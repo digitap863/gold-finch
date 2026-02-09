@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Eye, Search } from "lucide-react";
+import { Eye, Search, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -40,6 +40,9 @@ const AdminOrdersPage = () => {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -171,6 +174,43 @@ const AdminOrdersPage = () => {
     } catch (error) {
       console.error('Cancel error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to cancel order(s)');
+    }
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    setOrderToDelete(orderId);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!orderToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      const res = await fetch(`/api/admin/orders/${orderToDelete}`, {
+        method: 'DELETE',
+      });
+      
+      if (!res.ok) {
+        let errorMessage = 'Failed to delete order';
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // Response might not have JSON body
+        }
+        throw new Error(errorMessage);
+      }
+      
+      setOrders(prev => prev.filter(o => o._id !== orderToDelete));
+      toast.success('Order deleted successfully');
+      setDeleteModalOpen(false);
+      setOrderToDelete(null);
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete order');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -375,10 +415,21 @@ const AdminOrdersPage = () => {
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="outline" size="sm" onClick={() => navigateToOrder(o.orderCode)} className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 sm:py-2">
-                    <Eye className="h-4 w-4 sm:mr-1.5" />
-                    <span className="hidden sm:inline">View</span>
-                  </Button>
+                  <div className="flex items-center justify-end gap-1 sm:gap-2">
+                    <Button variant="outline" size="sm" onClick={() => navigateToOrder(o.orderCode)} className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 sm:py-2">
+                      <Eye className="h-4 w-4 sm:mr-1.5" />
+                      <span className="hidden sm:inline">View</span>
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => handleDeleteOrder(o._id)} 
+                      className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 sm:py-2"
+                    >
+                      <Trash2 className="h-4 w-4 sm:mr-1.5" />
+                      <span className="hidden sm:inline">Delete</span>
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))
@@ -427,6 +478,39 @@ const AdminOrdersPage = () => {
               className="bg-red-600 hover:bg-red-700"
             >
               Confirm Cancellation
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Order Confirmation Modal */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Order</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete this order? This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setOrderToDelete(null);
+              }}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDeleteOrder}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Order'}
             </Button>
           </div>
         </DialogContent>

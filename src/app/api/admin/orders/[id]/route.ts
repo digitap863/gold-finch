@@ -114,4 +114,36 @@ export async function PUT(
   }
 }
 
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  await connect();
+
+  const authResult = await withAdminAuth(req);
+  if (authResult) return authResult;
+
+  try {
+    const { id } = await params;
+    
+    // Try to find by orderCode first, then by _id
+    let order = await Order.findOne({ orderCode: id });
+    
+    if (!order) {
+      // Try to find by MongoDB _id
+      order = await Order.findById(id);
+    }
+    
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    await Order.findByIdAndDelete(order._id);
+
+    return NextResponse.json({ message: "Order deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    return NextResponse.json({ error: "Failed to delete order" }, { status: 500 });
+  }
+}
 
