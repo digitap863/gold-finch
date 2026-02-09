@@ -415,7 +415,7 @@ const AdminOrdersPage = () => {
                   />
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1 sm:gap-2">
+                  <div className="flex items-center justify-end gap-2 md:gap-5">
                     <Button variant="outline" size="sm" onClick={() => navigateToOrder(o.orderCode)} className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3 sm:py-2">
                       <Eye className="h-4 w-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">View</span>
