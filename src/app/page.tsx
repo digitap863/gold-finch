@@ -111,18 +111,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col md:items-center md:justify-center bg-gradient-to-br from-background to-muted px-4 sm:px-0 md:pt-0 pt-5">
-      <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto px-6 py-7 sm:px-8 sm:py-10 rounded-2xl shadow-lg border border-border bg-card/90 backdrop-blur-md">
+    <div className="flex min-h-screen flex-col md:items-center md:justify-center bg-gradient-to-br from-background to-muted px-2 sm:px-0 md:pt-0 pt-5">
+      <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto px-2 py-5 sm:px-8 sm:py-10 rounded-2xl shadow-lg border border-border bg-card/90 backdrop-blur-md">
         <CardHeader className="flex flex-col items-center gap-2">
           {/* <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-2">
             <span className="text-2xl font-bold text-primary">G</span>
           </div> */}
-          <Image src={logo} alt="Logo" className="md:w-[55%] w-[60%] h-[25%]"/>
-          <CardTitle className="text-2xl font-bold tracking-tight text-center">Login to your account</CardTitle>
-          <CardDescription className="text-center">Enter your mobile number and password below</CardDescription>
+          <Image src={logo} alt="Logo" className="md:w-[55%] w-[65%] h-[25%]"/>
+          <CardTitle className="md:text-2xl text-xl font-bold tracking-tight text-center">Login to your account</CardTitle>
+          <CardDescription className="text-center md:block hidden ">Enter your mobile number and password below</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="w-full flex flex-col md:gap-5 gap-3 mt-2">
+          <form onSubmit={handleSubmit} className="w-full flex flex-col md:gap-5 gap-1 mt-2">
             <div className="flex flex-col gap-1">
               <label htmlFor="identifier" className="text-sm font-medium text-foreground">Email or Mobile</label>
               <Input
