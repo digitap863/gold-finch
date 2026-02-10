@@ -111,14 +111,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col md:items-center md:justify-center bg-gradient-to-br from-background to-muted px-2 sm:px-0 md:pt-0 pt-5">
+    <div className="flex min-h-screen flex-col md:items-center md:justify-center bg-gradient-to-br from-background to-muted px-2 sm:px-0 md:pt-0 pt-5 relative">
       <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto px-2 py-5 sm:px-8 sm:py-10 rounded-2xl shadow-lg border border-border bg-card/90 backdrop-blur-md">
         <CardHeader className="flex flex-col items-center gap-2">
           {/* <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-2">
             <span className="text-2xl font-bold text-primary">G</span>
           </div> */}
           <Image src={logo} alt="Logo" className="md:w-[55%] w-[65%] h-[25%]"/>
-          <CardTitle className="md:text-2xl text-xl font-bold tracking-tight text-center">Login to your account</CardTitle>
+          <CardTitle className="md:text-2xl text-xl font-bold tracking-tight text-center whitespace-nowrap">Login to your account</CardTitle>
           <CardDescription className="text-center md:block hidden ">Enter your mobile number and password below</CardDescription>
         </CardHeader>
         <CardContent>
@@ -187,8 +187,7 @@ export default function LoginPage() {
             </div>
           )}
         </CardContent>
-      </Card>
-      <div className="md:mt-6 mt-1 text-center w-full max-w-md">
+        <div className="md:mt-6 mt-1 text-center w-full max-w-md">
         <span className="text-sm text-muted-foreground">Don&apos;t have an account? </span>
         <button
           className="text-sm text-primary font-medium hover:underline focus:outline-none cursor-pointer"
@@ -198,6 +197,8 @@ export default function LoginPage() {
         </button>
       </div>
 
+      </Card>
+      
       {/* Contact Information */}
       <div className="mt-8 text-center w-full max-w-md px-4 absolute md:bottom-4 bottom-0 md:right-0 right-2 create new ">
         <div className="p-4 rounded-lg bg-card/50 backdrop-blur-sm  shadow-lg border border-border/50">
