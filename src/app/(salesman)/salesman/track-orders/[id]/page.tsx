@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, use, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Calendar, Camera, Hash, Image as ImageIcon, Package, Settings, User, Volume2 } from "lucide-react";
+import { useRouter } from 'next/navigation';
+import { use, useCallback, useEffect, useState } from 'react';
 import { toast } from "sonner";
-import { ArrowLeft, Package, Calendar, User, Hash, Image as ImageIcon, Volume2, Settings } from "lucide-react";
 
 interface Order {
   _id: string;
@@ -34,6 +34,11 @@ interface Order {
     _id: string;
     title: string;
     images: string[];
+  };
+  stageImages?: {
+    cad_completed?: string[];
+    production_floor?: string[];
+    finished?: string[];
   };
 }
 
@@ -320,6 +325,87 @@ const OrderDetailPage = ({ params }: OrderDetailPageProps) => {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Stage Images from Admin */}
+      {order.stageImages && (
+        Object.entries(order.stageImages).some(([, urls]) => (urls as string[])?.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Production Progress Images
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* CAD Completed Images */}
+              {order.stageImages.cad_completed && order.stageImages.cad_completed.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge className="bg-purple-100 text-purple-800">CAD Completed</Badge>
+                    <span className="text-xs text-muted-foreground">{order.stageImages.cad_completed.length} image(s)</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {order.stageImages.cad_completed.map((img, idx) => (
+                      <div key={idx} className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={img} 
+                          alt={`CAD image ${idx + 1}`} 
+                          className="w-full h-auto object-cover rounded-lg border shadow-sm" 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Production Floor Images */}
+              {order.stageImages.production_floor && order.stageImages.production_floor.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge className="bg-orange-100 text-orange-800">Production Floor</Badge>
+                    <span className="text-xs text-muted-foreground">{order.stageImages.production_floor.length} image(s)</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {order.stageImages.production_floor.map((img, idx) => (
+                      <div key={idx} className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={img} 
+                          alt={`Production image ${idx + 1}`} 
+                          className="w-full h-auto object-cover rounded-lg border shadow-sm" 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Finished Images */}
+              {order.stageImages.finished && order.stageImages.finished.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge className="bg-green-100 text-green-800">Finished</Badge>
+                    <span className="text-xs text-muted-foreground">{order.stageImages.finished.length} image(s)</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {order.stageImages.finished.map((img, idx) => (
+                      <div key={idx} className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={img} 
+                          alt={`Finished image ${idx + 1}`} 
+                          className="w-full h-auto object-cover rounded-lg border shadow-sm" 
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
       )}
     </div>
   );

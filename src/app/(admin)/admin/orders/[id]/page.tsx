@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { pdf } from '@react-pdf/renderer';
-import { ArrowLeft, FileText, Package } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Package, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface OrderDetail {
@@ -65,13 +65,27 @@ interface OrderDetail {
     shopAddress?: string;
     shopMobile?: string;
   };
+  stageImages?: {
+    cad_completed?: string[];
+    production_floor?: string[];
+    finished?: string[];
+  };
 }
+
+const STAGE_IMAGE_STATUSES = ['cad_completed', 'production_floor', 'finished'] as const;
+const STAGE_LABELS: Record<string, string> = {
+  cad_completed: 'CAD Completed',
+  production_floor: 'Production Floor',
+  finished: 'Finished',
+};
 
 const OrderDetailPage = () => {
   const params = useParams();
   const router = useRouter();
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uploadingStage, setUploadingStage] = useState<string | null>(null);
+  const stageFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -108,6 +122,69 @@ const OrderDetailPage = () => {
       toast.success('Order updated');
     } catch {
       toast.error('Failed to update order');
+    }
+  };
+
+  // Upload images for a specific stage
+  const uploadStageImages = async (stage: string, files: FileList) => {
+    if (!order) return;
+    
+    try {
+      setUploadingStage(stage);
+      const toastId = toast.loading(`Uploading ${files.length} image(s) for ${STAGE_LABELS[stage]}...`);
+      
+      const formData = new FormData();
+      formData.append('stage', stage);
+      Array.from(files).forEach((file) => {
+        formData.append('images', file);
+      });
+
+      const res = await fetch(`/api/admin/orders/${params.id}/stage-images`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to upload images');
+      }
+
+      const data = await res.json();
+      setOrder(prev => prev ? { ...prev, stageImages: data.stageImages } : prev);
+      toast.success(`${data.uploadedCount} image(s) uploaded successfully`, { id: toastId });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to upload images');
+    } finally {
+      setUploadingStage(null);
+      if (stageFileInputRef.current) {
+        stageFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Remove a specific image from a stage
+  const removeStageImage = async (stage: string, imageUrl: string) => {
+    if (!order) return;
+
+    try {
+      const res = await fetch(`/api/admin/orders/${params.id}/stage-images`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage, imageUrl }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to remove image');
+      }
+
+      const data = await res.json();
+      setOrder(prev => prev ? { ...prev, stageImages: data.stageImages } : prev);
+      toast.success('Image removed');
+    } catch (error) {
+      console.error('Remove error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to remove image');
     }
   };
 
@@ -643,6 +720,130 @@ const OrderDetailPage = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Stage Images Upload */}
+          {STAGE_IMAGE_STATUSES.includes(order.status as typeof STAGE_IMAGE_STATUSES[number]) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Stage Images
+                </CardTitle>
+                <CardDescription>
+                  Upload images for the current stage: <strong>{STAGE_LABELS[order.status]}</strong>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <input
+                    ref={stageFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    id="stage-image-upload"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        uploadStageImages(order.status, e.target.files);
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    disabled={uploadingStage !== null}
+                    onClick={() => stageFileInputRef.current?.click()}
+                  >
+                    {uploadingStage ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Choose Images
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Show images for current stage */}
+                {order.stageImages?.[order.status as keyof typeof order.stageImages] && 
+                 (order.stageImages[order.status as keyof typeof order.stageImages] as string[]).length > 0 && (
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground block mb-2">
+                      {STAGE_LABELS[order.status]} Images ({(order.stageImages[order.status as keyof typeof order.stageImages] as string[]).length})
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(order.stageImages[order.status as keyof typeof order.stageImages] as string[]).map((img, idx) => (
+                        <div key={idx} className="relative group">
+                          <div className="relative aspect-square">
+                            <Image
+                              src={img}
+                              alt={`Stage image ${idx + 1}`}
+                              fill
+                              className="object-cover rounded-md border"
+                            />
+                          </div>
+                          <button
+                            onClick={() => removeStageImage(order.status, img)}
+                            className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* All Stage Images Overview */}
+          {order.stageImages && (
+            Object.entries(order.stageImages).some(([, urls]) => (urls as string[])?.length > 0) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">All Stage Images</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {STAGE_IMAGE_STATUSES.map(stage => {
+                    const imgs = (order.stageImages?.[stage] as string[]) || [];
+                    if (imgs.length === 0) return null;
+                    return (
+                      <div key={stage}>
+                        <label className="text-xs font-medium text-muted-foreground block mb-2">
+                          {STAGE_LABELS[stage]} ({imgs.length})
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {imgs.map((img, idx) => (
+                            <div key={idx} className="relative group">
+                              <div className="relative aspect-square">
+                                <Image
+                                  src={img}
+                                  alt={`${stage} image ${idx + 1}`}
+                                  fill
+                                  className="object-cover rounded-md border"
+                                />
+                              </div>
+                              <button
+                                onClick={() => removeStageImage(stage, img)}
+                                className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )
+          )}
         </div>
       </div>
     </div>

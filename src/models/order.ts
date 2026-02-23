@@ -37,7 +37,14 @@ const orderSchema = new mongoose.Schema({
     enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
   },
-  cancelReason: { type: String, required: false }
+  cancelReason: { type: String, required: false },
+  
+  // Admin-uploaded images at specific production stages
+  stageImages: {
+    cad_completed: { type: [String], default: [] },
+    production_floor: { type: [String], default: [] },
+    finished: { type: [String], default: [] },
+  }
 }, {
   timestamps: true
 });
