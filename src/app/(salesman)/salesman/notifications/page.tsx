@@ -4,15 +4,15 @@
 // This page displays order status notifications exclusively for salesmen
 // Admins do not use this notification system
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { AlertTriangle, Bell, Check, CheckCircle, Info, Search, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Bell, CheckCircle, XCircle, AlertTriangle, Info, Check, Search } from "lucide-react";
 
 interface NotificationItem {
   _id: string;
@@ -72,12 +72,7 @@ export default function SalesmanNotificationsPage() {
       params.set("page", page.toString());
       params.set("limit", "10");
 
-      const token = localStorage.getItem("token");
-      const response = await fetch(`/api/salesman/notifications?${params.toString()}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
+      const response = await fetch(`/api/salesman/notifications?${params.toString()}`);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -107,12 +102,10 @@ export default function SalesmanNotificationsPage() {
 
   const markAsRead = async (notificationIds: string[]) => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch("/api/salesman/notifications", {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           action: "markAsRead",
@@ -136,12 +129,10 @@ export default function SalesmanNotificationsPage() {
 
   const markAllAsRead = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch("/api/salesman/notifications", {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           action: "markAllAsRead"

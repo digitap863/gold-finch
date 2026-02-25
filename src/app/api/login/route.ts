@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
 import User from "@/models/user";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   await connect();
@@ -45,10 +45,9 @@ export async function POST(req: NextRequest) {
     { expiresIn: "7d" }
   );
 
-  // Set token as HTTP-only cookie and also return it for localStorage
+  // Set token as HTTP-only cookie (secure, not accessible via JavaScript)
   const response = NextResponse.json({
     message: "Login successful",
-    token: token, // Add token to response for localStorage
     user: { 
       role: user.role, 
       isApproved: user.isApproved,

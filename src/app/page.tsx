@@ -1,12 +1,12 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useMutation } from "@tanstack/react-query";
@@ -44,11 +44,7 @@ export default function LoginPage() {
         return;
       }
       
-      // Store token in localStorage for API calls
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-      
+      // Token is already set as HTTP-only cookie by the server
       if (data.user.role === "admin") router.push("/admin");
       else if (data.user.role === "salesman") router.push("/salesman");
       else router.push("/");

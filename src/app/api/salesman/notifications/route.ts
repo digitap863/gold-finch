@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
 import { connect } from "@/db.Config/db.Config";
 import Notification from "@/models/notification";
 import { jwtVerify } from "jose";
+import { NextRequest, NextResponse } from "next/server";
 
 // Salesman Notifications API
 // This endpoint is exclusively for salesman dashboard notifications
@@ -22,9 +22,8 @@ export async function GET(req: NextRequest) {
   await connect();
 
   try {
-    // Verify JWT token
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.replace("Bearer ", "");
+    // Verify JWT token from cookie
+    const token = req.cookies.get("token")?.value;
     if (!token) {
       return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
@@ -89,8 +88,8 @@ export async function PUT(req: NextRequest) {
   await connect();
 
   try {
-    // Verify JWT token
-    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    // Verify JWT token from cookie
+    const token = req.cookies.get("token")?.value;
     if (!token) {
       return NextResponse.json({ error: "No token provided" }, { status: 401 });
     }
