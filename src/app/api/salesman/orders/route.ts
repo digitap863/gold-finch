@@ -7,6 +7,16 @@ import Order from "@/models/order";
 import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
 
+// Increase body size limit to 50MB for file uploads
+export const config = {
+  api: {
+    bodyParser: false, // FormData is parsed manually
+    responseLimit: false,
+  },
+};
+
+export const maxDuration = 60; // Allow up to 60 seconds for file upload
+
 // Ensure Catalog model is registered for populate
 void Catalog;
 

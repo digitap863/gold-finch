@@ -20,7 +20,12 @@ const nextConfig: NextConfig = {
   },
   eslint:{
     ignoreDuringBuilds: true,
-  }
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '50mb', // Allow up to 50MB for file uploads
+    },
+  },
 };
 
 export default nextConfig;
